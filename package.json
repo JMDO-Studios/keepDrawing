@@ -4,11 +4,10 @@
   "description": "a suite of games based on handtrackjs",
   "main": "index.js",
   "scripts": {
+    "start": "node main",
+    "start-dev": "nodemon main -e html,js,css --ignore public",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint client server",
-    "start-dev": "npm run build-watch & npm run start-server",
-    "build-watch": "webpack -w --mode=\"development\"",
-    "start-server": "nodemon main.js -e html,js,css --ignore public"
+    "lint": "eslint client server"
   },
   "repository": {
     "type": "git",
@@ -27,17 +26,10 @@
   "homepage": "https://github.com/mxavier927/keepDrawing#readme",
   "dependencies": {
     "aframe": "^1.0.4",
-    "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "handtrackjs": "0.0.13",
-    "morgan": "^1.10.0",
     "nodemon": "^2.0.6",
     "pg": "^8.5.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-redux": "^5.0.7",
-    "react-router": "^5.1.0",
-    "react-router-dom": "^5.2.0",
     "redux": "^4.0.5",
     "sequelize": "^6.3.5",
     "socket.io": "^3.0.3",
