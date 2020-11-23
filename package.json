@@ -27,10 +27,12 @@
   "dependencies": {
     "aframe": "^1.0.4",
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "handtrackjs": "0.0.13",
     "nodemon": "^2.0.6",
     "pg": "^8.5.1",
     "redux": "^4.0.5",
+    "resemblejs": "^3.2.5",
     "sequelize": "^6.3.5",
     "socket.io": "^3.0.3",
     "socketio": "^1.0.0",
