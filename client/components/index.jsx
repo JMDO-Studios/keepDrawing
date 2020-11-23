@@ -11,6 +11,7 @@ class Routes extends Component {
       <Router>
         <Switch>
           {/* <Route exact path="/" component={handTrack} /> */}
+          <Route exact path="/" component={handTrack} />
         </Switch>
       </Router>
     );
