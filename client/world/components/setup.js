@@ -4,9 +4,9 @@ AFRAME.registerComponent('setup', {
     console.log('registered setup');
     // create assets and append to scene
 
-    const sky = document.createElement('a-sky');
-    sky.setAttribute('color', '#6EBAA7');
-    scene.appendChild(sky);
+    // const sky = document.createElement('a-sky');
+    // sky.setAttribute('color', '#6EBAA7');
+    // scene.appendChild(sky);
 
     const torus = document.createElement('a-torus-knot');
     torus.setAttribute('color', '#B84A39');
@@ -22,6 +22,8 @@ AFRAME.registerComponent('setup', {
 
     const text = document.createElement('a-text');
     text.setAttribute('value', 'HELLO WORLD');
+    text.setAttribute('color', '#000000');
+    text.setAttribute('fly', 'true');
     torus.appendChild(text);
   },
 });

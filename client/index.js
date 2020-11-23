@@ -11,7 +11,7 @@ scene.setAttribute('setup', '');
 
 const camera = document.createElement('a-entity');
 camera.setAttribute('camera');
-camera.setAttribute('wasd-controls');
+camera.setAttribute('wasd-controls', {acceleration:100});
 camera.setAttribute('look-controls');
 
 scene.appendChild(camera);
