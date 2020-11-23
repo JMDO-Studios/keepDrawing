@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Keep Drawing</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <link rel="stylesheet" href="/style.css" />
-        <script src='/bundle.js' defer></script>
-    </head>
-      
-    <body>
-        <div id="root">
-            Hello World
-        </div>
-    </body>     
+  <head>
+    <title>Keep Drawing</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/bundle.js" defer></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body>
+    <div id="root">Hello World</div>
+    <script>
+      const socket = io();
+      //lines 18-22 are just meant to test the communications between server and client
+      const body = document.querySelector('#root');
+      root.addEventListener('click', (e) => {
+        e.preventDefault();
+        const message = 'hello';
+        //everytime you click on root div/ hello world you should see this message in console
+        socket.emit('message', message);
+      });
+    </script>
+  </body>
 </html>
