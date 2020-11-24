@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 import {
   BrowserRouter as Router, Route, Switch,
 } from 'react-router-dom';
-import { connect } from 'react-redux';
-// import Home from './Home';
 
-class Routes extends Component {
+export default class Routes extends Component {
   render() {
     return (
       <Router>
@@ -16,5 +14,3 @@ class Routes extends Component {
     );
   }
 }
-
-export default connect()(Routes);
