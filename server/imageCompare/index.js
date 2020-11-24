@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
       ${assetUrls.map((compareAsset, idx2) => (`
         <img src=${asset}></img>
         <img src=${compareAsset}></img>
-        <h5>Percent Match: ${100 - percentages[(idx1 * 5) + idx2].misMatchPercentage}</h5>
+        <h5>Percent Match: ${100 - percentages[(idx1 * 6) + idx2].misMatchPercentage}</h5>
         `))}
         </div>`
   ))}
