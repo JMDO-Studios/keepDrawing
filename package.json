@@ -35,7 +35,6 @@
     "redux": "^4.0.5",
     "sequelize": "^6.3.5",
     "socket.io": "^3.0.3",
-    "socketio": "^1.0.0",
     "twilio": "^3.52.0",
     "webpack": "^5.6.0",
     "webpack-cli": "^4.2.0"
