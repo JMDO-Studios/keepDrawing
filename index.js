@@ -6,9 +6,12 @@ const path = require('path');
 
 app.use(express.static(path.join(__dirname, '/public')));
 
-app.get('*', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
 });
+
+// this is just to test the image comparison functions
+app.use('/compareimage', require('./server/imageCompare'));
 
 app.use((req, res, next) => {
   const err = new Error('Not found');
