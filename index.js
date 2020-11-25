@@ -17,6 +17,10 @@ app.use('/compareimage', require('./server/imageCompare'));
 
 app.use('/waitingroom', require('./server/rooms'));
 
+app.get('/imagegame', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/imagegame.html'));
+});
+
 app.use((req, res, next) => {
   const err = new Error('Not found');
   err.status = 404;
@@ -34,6 +38,15 @@ const init = () => {
 
   io.on('connection', (socket) => {
     console.log('a user connected');
+    socket.on('disconnect', () => {
+      console.log('a user disconnected');
+    });
+    socket.on('chat message', (message) => {
+      io.emit('chat message', `RECEIVED:${message}`);
+    });
+    socket.on('imageClicked', (imageData) => {
+      io.emit('imageClicked', imageData);
+    });
   });
 
   http.listen(PORT, () => {
