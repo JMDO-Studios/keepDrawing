@@ -5,6 +5,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
+const { getDiffTestSocket } = require('./server/imageCompare/getDiff');
 
 app.use(express.static(path.join(__dirname, '/public')));
 
@@ -45,7 +46,9 @@ const init = () => {
       io.emit('chat message', `RECEIVED:${message}`);
     });
     socket.on('imageClicked', (imageData) => {
-      io.emit('imageClicked', imageData);
+      Promise.resolve(getDiffTestSocket(imageData.data, './public/testAssets/rightblack.jpg')).then((percent) => {
+        io.emit('imageClicked', { data: imageData.data, percent: 100 - percent.misMatchPercentage });
+      });
     });
   });
 

@@ -24,6 +24,7 @@ if (window.location.pathname === '/waitingroom') {
 if (window.location.pathname === '/imagegame') {
   const clickableImages = Array.from(document.getElementsByClassName('clickable'));
   const receivedImage = document.getElementById('received');
+  const matchResult = document.getElementById('matchResult');
 
   clickableImages.forEach((image) => {
     image.addEventListener('click', (event) => {
@@ -34,7 +35,9 @@ if (window.location.pathname === '/imagegame') {
   });
 
   socket.on('imageClicked', (data) => {
+    console.log(data);
     receivedImage.src = data.data;
+    matchResult.innerText = `Match percentage: ${data.percent}%`;
   });
 }
 

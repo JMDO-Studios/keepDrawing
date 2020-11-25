@@ -2,7 +2,7 @@
 /// we can delete this for production
 
 const express = require('express');
-const getDiff = require('./getDiff.js');
+const { getDiff } = require('./getDiff.js');
 
 const app = express();
 
