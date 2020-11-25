@@ -14,5 +14,16 @@ async function getDiff(path1, path2) {
     return error;
   }
 }
+async function getDiffTestSocket(clientImg, imgPath) {
+  try {
+    const serverImg = fs.readFileSync(imgPath);
 
-module.exports = getDiff;
+    const data = await compareImages(clientImg, serverImg);
+    console.log('DATA', data);
+    return data;
+  } catch (error) {
+    console.log('ERROR', error);
+    return error;
+  }
+}
+module.exports = { getDiff, getDiffTestSocket };
