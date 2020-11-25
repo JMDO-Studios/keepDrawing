@@ -2,6 +2,8 @@ const express = require('express');
 
 const app = express();
 
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 const path = require('path');
 
 app.use(express.static(path.join(__dirname, '/public')));
@@ -12,6 +14,8 @@ app.get('/', (req, res) => {
 
 // this is just to test the image comparison functions
 app.use('/compareimage', require('./server/imageCompare'));
+
+app.use('/waitingroom', require('./server/rooms'));
 
 app.use((req, res, next) => {
   const err = new Error('Not found');
@@ -27,7 +31,12 @@ app.use((err, req, res, next) => {
 
 const init = () => {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+
+  io.on('connection', (socket) => {
+    console.log('a user connected');
+  });
+
+  http.listen(PORT, () => {
     console.log(`Listening at port ${PORT}`);
   });
 };
