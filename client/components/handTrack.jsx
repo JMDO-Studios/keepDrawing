@@ -18,6 +18,8 @@ class HandTrack extends Component {
     };
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     const video = document.querySelector('#video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
     let model;
     const runDetection = () => {
       model.detect(video)
@@ -27,8 +29,12 @@ class HandTrack extends Component {
             const hand = predictions[0].bbox;
             const x = hand[0];
             const y = hand[1];
-            console.log(x);
-            console.log(y);
+            // console.log(x);
+            // console.log(y);
+            // draws a dot at the x & y coordinates
+            context.fillRect(x, y, 3, 3);
+            // shows the location of the hand
+            // model.renderPredictions(predictions, canvas, context, video);
           }
         });
       // requestAnimationFrame(runDetection());
@@ -39,7 +45,7 @@ class HandTrack extends Component {
           navigator.getUserMedia({ video: {} }, (stream) => {
             video.srcObject = stream;
             //  Run our detection
-            setInterval(runDetection, 100);
+            setInterval(runDetection, 10);
           },
           (err) => console.log(err));
         }
@@ -53,7 +59,8 @@ class HandTrack extends Component {
   render() {
     return (
       <div>
-        <video id='video' />
+        <video id='video' autoPlay='autoplay' />
+        <canvas id='canvas' className='canvasbox' />
       </div>
     );
   }
