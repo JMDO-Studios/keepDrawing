@@ -35,19 +35,75 @@ app.use((err, req, res) => {
   res.send(`Something wrong: ${err.message}`);
 });
 
+function assignUserstoGame(lobbyRoster, gameRoomName) {
+  const rosterIterator = lobbyRoster.values();
+
+  // teamName is declared outside the for loop
+  // so it can persist across iterations in the assignUser function
+  let teamName = null;
+
+  for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
+    const socketId = rosterIterator.next();
+    const { value } = socketId;
+    const socket = io.of('/').sockets.get(value);
+
+    // first x users join game room, that room gets added as a property to the socket
+    socket.join(gameRoomName);
+    socket.gameRoom = gameRoomName;
+
+    // every two users join their own team room, that room also gets added as property to the socket
+
+    assignUsertoTeam(socket, gameRoomName, rosterIdx);
+    // all x users leave lobby
+    socket.leave('lobby');
+  }
+}
+
+function createGameRoomName(name = '', offset = 0) {
+  // creates a game room name, if that name already exists, adds a digit and check again.
+  // there is probably a smoother way of doing this
+  let gameRoomName = name === '' ? `GAME${Math.floor(Math.random() * 100) + offset}` : name + offset;
+  if (io.sockets.adapter.rooms.has(gameRoomName)) {
+    gameRoomName = createGameRoomName(gameRoomName, offset + 1);
+  }
+  return gameRoomName;
+}
+
+function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
+  return gameRoomName + idOfFirstTeamMate;
+}
+
+function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
+  // teamName is initialized in AssignUserstoGame
+  teamName = rosterIdx % bombGameSettings.teamSize === 0
+    ? createTeamRoomName(gameRoomName, socket.id)
+    : teamName;
+
+  console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameRoomName}`);
+
+  try {
+    socket.join(teamName);
+    socket.teamRoom = teamName;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function getIdsOfSocketsInRoom(roomName) {
+  return io.sockets.adapter.rooms.get(roomName);
+}
+
 const init = () => {
   const PORT = process.env.PORT || 3000;
 
   io.on('connection', async (socket) => {
     socket.join('lobby');
-    const lobbyRoster = io.sockets.adapter.rooms.get('lobby');
+    const lobbyRoster = getIdsOfSocketsInRoom('lobby');
 
     if (lobbyRoster.size >= bombGameSettings.gameSize) {
       const gameRoomName = createGameRoomName();
       assignUserstoGame(lobbyRoster, gameRoomName);
     }
-
-    console.log(`socket ${socket.id} has gameRoom  of`, socket.rooms);
 
     socket.on('disconnect', () => {
       console.log('a user disconnected');
@@ -69,49 +125,3 @@ const init = () => {
 };
 
 init();
-
-function assignUserstoGame(lobbyRoster, gameRoomName) {
-  const rosterIterator = lobbyRoster.values();
-
-  // teamName is declared outside the for loop
-  // so it can persist across iterations in the assignUser function
-  let teamName = null;
-
-  for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
-    const socketId = rosterIterator.next();
-    const { value } = socketId;
-    const socket = io.of('/').sockets.get(value);
-
-    // first x users join game room, that room gets added as a property to the socket
-    socket.join(gameRoomName);
-    socket.gameRoom = socket.rooms;
-
-    // every two users join their own team room, that room also gets added as property to the socket
-
-    assignUsertoTeam(socket, gameRoomName, rosterIdx);
-    // all x users leave lobby
-    socket.leave('lobby');
-  }
-}
-
-function createGameRoomName() {
-  return `GAME${Math.floor(Math.random() * 100)}`;
-}
-
-function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
-  return gameRoomName + idOfFirstTeamMate;
-}
-
-function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
-  teamName = rosterIdx % bombGameSettings.teamSize === 0
-    ? createTeamRoomName(gameRoomName, socket.id)
-    : teamName;
-
-  console.log(teamName);
-  console.log(`Socket ${socket.id} is member of ${teamName}`);
-  try {
-    socket.join(teamName);
-  } catch (error) {
-    console.log(error);
-  }
-}
