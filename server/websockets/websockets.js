@@ -83,7 +83,7 @@ async function websocketLogic(socket) {
   });
   socket.on('imageClicked', (imageData) => {
     Promise.resolve(getDiffTestSocket(imageData.data, './public/testAssets/rightblack.jpg')).then((percent) => {
-      io.emit('imageClicked', { data: imageData.data, percent: 100 - percent.misMatchPercentage });
+      socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     });
   });
 }

@@ -13,9 +13,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
-// this is just to test the image comparison functions
-app.use('/compareimage', require('./server/imageCompare'));
-
+// just a quick chat room to test socket.io
 app.use('/waitingroom', require('./server/rooms'));
 
 app.get('/imagegame', (req, res) => {
