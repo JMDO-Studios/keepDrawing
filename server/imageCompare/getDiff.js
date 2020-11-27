@@ -7,7 +7,6 @@ async function getDiff(path1, path2) {
     const img2 = fs.readFileSync(path2);
 
     const data = await compareImages(img1, img2);
-    console.log('DATA', data);
     return data;
   } catch (error) {
     console.log('ERROR', error);
@@ -19,7 +18,6 @@ async function getDiffTestSocket(clientImg, imgPath) {
     const serverImg = fs.readFileSync(imgPath);
 
     const data = await compareImages(clientImg, serverImg);
-    console.log('DATA', data);
     return data;
   } catch (error) {
     console.log('ERROR', error);

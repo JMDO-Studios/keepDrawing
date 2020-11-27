@@ -6,6 +6,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
 const { getDiffTestSocket } = require('./server/imageCompare/getDiff');
+const { bombGameSettings } = require('./gameSettings');
 
 app.use(express.static(path.join(__dirname, '/public')));
 
@@ -28,7 +29,7 @@ app.use((req, res, next) => {
   next(err);
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err, err.stack);
   res.status(err.status || 500);
   res.send(`Something wrong: ${err.message}`);
@@ -37,10 +38,20 @@ app.use((err, req, res, next) => {
 const init = () => {
   const PORT = process.env.PORT || 3000;
 
-  io.on('connection', (socket) => {
-    console.log('a user connected');
+  io.on('connection', async (socket) => {
+    socket.join('lobby');
+    const lobbyRoster = io.sockets.adapter.rooms.get('lobby');
+
+    if (lobbyRoster.size >= bombGameSettings.gameSize) {
+      const gameRoomName = createGameRoomName();
+      assignUserstoGame(lobbyRoster, gameRoomName);
+    }
+
+    console.log(`socket ${socket.id} has gameRoom  of`, socket.rooms);
+
     socket.on('disconnect', () => {
       console.log('a user disconnected');
+      socket.leave('lobby');
     });
     socket.on('chat message', (message) => {
       io.emit('chat message', `RECEIVED:${message}`);
@@ -58,3 +69,49 @@ const init = () => {
 };
 
 init();
+
+function assignUserstoGame(lobbyRoster, gameRoomName) {
+  const rosterIterator = lobbyRoster.values();
+
+  // teamName is declared outside the for loop
+  // so it can persist across iterations in the assignUser function
+  let teamName = null;
+
+  for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
+    const socketId = rosterIterator.next();
+    const { value } = socketId;
+    const socket = io.of('/').sockets.get(value);
+
+    // first x users join game room, that room gets added as a property to the socket
+    socket.join(gameRoomName);
+    socket.gameRoom = socket.rooms;
+
+    // every two users join their own team room, that room also gets added as property to the socket
+
+    assignUsertoTeam(socket, gameRoomName, rosterIdx);
+    // all x users leave lobby
+    socket.leave('lobby');
+  }
+}
+
+function createGameRoomName() {
+  return `GAME${Math.floor(Math.random() * 100)}`;
+}
+
+function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
+  return gameRoomName + idOfFirstTeamMate;
+}
+
+function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
+  teamName = rosterIdx % bombGameSettings.teamSize === 0
+    ? createTeamRoomName(gameRoomName, socket.id)
+    : teamName;
+
+  console.log(teamName);
+  console.log(`Socket ${socket.id} is member of ${teamName}`);
+  try {
+    socket.join(teamName);
+  } catch (error) {
+    console.log(error);
+  }
+}
