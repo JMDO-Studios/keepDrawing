@@ -5,7 +5,7 @@ const path = require('path');
 // otherwise the client has trobule connecting to the server-side sockets
 const {
   express, app, http, io, websocketLogic,
-} = require('./server/websockets');
+} = require('./server/websockets/websockets');
 
 app.use(express.static(path.join(__dirname, '/public')));
 

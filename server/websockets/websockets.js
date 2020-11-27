@@ -3,9 +3,9 @@ const {
   app,
   http,
   io,
-} = require('./serverbuild');
-const { getDiffTestSocket } = require('./imageCompare/getDiff');
-const { bombGameSettings } = require('../gameSettings');
+} = require('../serverbuild');
+const { getDiffTestSocket } = require('../imageCompare/getDiff');
+const { bombGameSettings } = require('../../gameSettings');
 
 function assignUserstoGame(lobbyRoster, gameRoomName) {
   const rosterIterator = lobbyRoster.values();
