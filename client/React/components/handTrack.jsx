@@ -1,8 +1,7 @@
 import * as handTrack from 'handtrackjs';
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 
-class HandTrack extends Component {
+export default class HandTrack extends Component {
   componentDidMount() {
     const modelParams = {
       // flip e.g for video
@@ -65,16 +64,3 @@ class HandTrack extends Component {
     );
   }
 }
-
-export default connect()(HandTrack);
-
-// const img = document.getElementById('img');
-
-// // loading the model
-// handTrack.load().then((model) => {
-//   // detect objects in the image
-//   console.log('model loaded');
-//   model.detect(img).then((predictions) => {
-//     console.log('Predictions: ', predictions);
-//   });
-// });
