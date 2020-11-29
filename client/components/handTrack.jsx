@@ -8,13 +8,13 @@ class HandTrack extends Component {
       // flip e.g for video
       flipHorizontal: true,
       // reduce input image size for gains in speed.
-      imageScaleFactor: 0.7,
+      // imageScaleFactor: 0.7,
       // maximum number of boxes to detect
       maxNumBoxes: 1,
       // ioU threshold for non-max suppression
       iouThreshold: 0.5,
       // confidence threshold for predictions.
-      scoreThreshold: 0.79,
+      scoreThreshold: 0.75,
     };
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     const video = document.querySelector('#video');
@@ -25,29 +25,35 @@ class HandTrack extends Component {
       model.detect(video)
         .then((predictions) => {
           // console.log(predictions);
-          if (predictions.length !== 0) {
+          if (predictions[0]) {
             const hand = predictions[0].bbox;
             const x = hand[0];
             const y = hand[1];
             // console.log(x);
             // console.log(y);
+            // find middle value of predictions
+            // const midval = predictions[0].bbox[0] + (predictions[0].bbox[2] / 2);
+            // const gamex = document.body.clientWidth * (midval / video.width);
+            // context.fillRect(gamex, y, 1, 1);
             // draws a dot at the x & y coordinates
-            context.fillRect(x, y, 3, 3);
+            // context.fillRect(x, y, 1, 1);
             // shows the location of the hand
-            // model.renderPredictions(predictions, canvas, context, video);
+            model.renderPredictions(predictions, canvas, context, video);
           }
         });
-      // requestAnimationFrame(runDetection());
+      requestAnimationFrame(runDetection);
     };
     handTrack.startVideo(video)
       .then((status) => {
         if (status) {
-          navigator.getUserMedia({ video: {} }, (stream) => {
-            video.srcObject = stream;
-            //  Run our detection
-            setInterval(runDetection, 10);
-          },
-          (err) => console.log(err));
+          // runDetection();
+        //   navigator.getUserMedia({ video: {} }, (stream) => {
+        //     video.srcObject = stream;
+        //     //  Run our detection
+          // runDetection();
+          setInterval(runDetection, 1);
+        //   },
+        //   (err) => console.log(err));
         }
       });
     handTrack.load(modelParams)
@@ -59,8 +65,8 @@ class HandTrack extends Component {
   render() {
     return (
       <div>
-        <video id='video' autoPlay='autoplay' />
-        <canvas id='canvas' className='canvasbox' />
+        <video id="video" autoplay />
+        <canvas id="canvas" className="canvasbox" />
       </div>
     );
   }
