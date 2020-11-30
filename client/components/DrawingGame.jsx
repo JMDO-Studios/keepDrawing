@@ -1,16 +1,13 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 import * as handTrack from 'handtrackjs';
 
 const modelParams = {
-  // flip e.g for video
   flipHorizontal: true,
   // reduce input image size for gains in speed.
   // imageScaleFactor: 0.7,
   // maximum number of boxes to detect
   maxNumBoxes: 1,
-  // ioU threshold for non-max suppression
   iouThreshold: 0.5,
-  // confidence threshold for predictions.
   scoreThreshold: 0.75,
 };
 
@@ -27,60 +24,76 @@ export default class DrawingGame extends Component {
       message: '',
     };
     this.startVideo = this.startVideo.bind(this);
-    this.toggleVideo = this.toggleVideo.bind(this);
-    this.runDetection = this.runDetection(this);
+    // this.toggleVideo = this.toggleVideo.bind(this);
+    this.runDetection = this.runDetection.bind(this);
     this.startGame = this.startGame(this);
   }
 
-  async startVideo() {
-    const status = await handTrack.startVideo(video);
-    if (status) {
-      this.setState({ isVideo: true, message: 'Video started. Now tracking.' });
-    } else {
-      console.log('please enable video');
-      this.setState({ message: 'Please enable video.'});
-    }
+  startVideo() {
+    handTrack.startVideo(video)
+      .then((status) => {
+        console.log('video started', status);
+        if (status) {
+          this.setState({ isVideo: true, message: 'Video started. Now tracking.' });
+          console.log('video started again...');
+          this.runDetection();
+        } else {
+          console.log('please enable video');
+          this.setState({ message: 'Please enable video.' });
+        }
+      });
   }
 
-  toggleVideo() {
-    const { isVideo } = this.state;
-    if (!isVideo) {
-      this.startVideo();
-      this.setState({ message: 'Starting video.' });
-    } else {
-      handTrack.stopVideo(video);
-      this.setState({ isVideo: false, message: 'Video stopped' });
-    }
-  }
+  // toggleVideo() {
+  //   const { isVideo } = this.state;
+  //   if (!isVideo) {
+  //     this.setState({ message: 'Starting video.' });
+  //     this.startVideo();
+  //   } else {
+  //     this.setState({ isVideo: false, message: 'Video stopped' });
+  //     handTrack.stopVideo(video);
+  //   }
+  // }
 
   runDetection() {
     const { isVideo } = this.state;
     const { runDetection } = this;
-    model.detect(video).then((predictions) => {
-      model.renderPredictions(predictions, canvas, context, video);
-      if (predictions[0]) {
-        const hand = predictions[0].bbox;
-        const x = hand[0];
-        const y = hand[1];
-        context.fillRect(x, y, 1, 1);
-      }
-      if (isVideo) {
-        window.requestAnimationFrame(runDetection);
-      }
-    });
+    if (model) {
+      model.detect(video).then((predictions) => {
+        console.log('model detected');
+        // model.renderPredictions(predictions, canvas, context, video);
+        if (predictions[0]) {
+          model.renderPredictions(predictions, canvas, context, video);
+
+          const hand = predictions[0].bbox;
+          const x = hand[0];
+          const y = hand[1];
+          console.log(x);
+          // context.fillRect(x, y, 1, 1);
+        }
+        if (isVideo) {
+          window.requestAnimationFrame(runDetection);
+        }
+      });
+    }
   }
 
-  async startGame() {
+  startGame() {
     const { startVideo, runDetection } = this;
     console.log('Start Drawing');
-    this.setState({ message: 'Please wait...' });
-    const [videoStatus, lmodel] = await Promise.all([
-      startVideo(),
-      handTrack.load(modelParams),
-    ]);
-    model = lmodel;
+    // this.setState({ message: 'Please wait...' });
+    // const [videoStatus, lmodel] = await Promise.all([
+    //   startVideo(),
+    //   handTrack.load(modelParams),
+    // ]);
+    // model = lmodel;
+    handTrack.load(modelParams)
+      .then((lmodel) => {
+        model = lmodel;
+        startVideo();
+      });
     console.log('model loaded');
-    runDetection();
+    // runDetection();
 
     this.setState({ message: 'READY' });
   }

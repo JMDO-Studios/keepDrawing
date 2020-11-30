@@ -1,8 +1,7 @@
 import * as handTrack from 'handtrackjs';
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 
-class HandTrack extends Component {
+export default class HandTrack extends Component {
   componentDidMount() {
     const modelParams = {
       // flip e.g for video
@@ -17,7 +16,7 @@ class HandTrack extends Component {
       scoreThreshold: 0.75,
     };
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-    const video = document.querySelector('#video');
+    const video = document.querySelector('#myVideo');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     let model;
@@ -65,22 +64,9 @@ class HandTrack extends Component {
   render() {
     return (
       <div>
-        <video id="video" autoplay />
+        <video id="myVideo" autoplay />
         <canvas id="canvas" className="canvasbox" />
       </div>
     );
   }
 }
-
-export default connect()(HandTrack);
-
-// const img = document.getElementById('img');
-
-// // loading the model
-// handTrack.load().then((model) => {
-//   // detect objects in the image
-//   console.log('model loaded');
-//   model.detect(img).then((predictions) => {
-//     console.log('Predictions: ', predictions);
-//   });
-// });

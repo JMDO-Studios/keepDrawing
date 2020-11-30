@@ -1,20 +1,9 @@
-#video {
+#myVideo {
   min-width: 100%;
   min-height: 100vh;
   object-fit: cover;
-  /* display: none; */
+  display: none;
 }
-
-/* .notes{
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  width: 100%;
-  height: 20vh;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-} */
 
 .canvasbox {
   border-radius: 3px;

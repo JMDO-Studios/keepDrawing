@@ -6,12 +6,11 @@ import { connect } from 'react-redux';
 import handTrack from './handTrack';
 import DrawingGame from './DrawingGame';
 
-class Routes extends Component {
+export default class Routes extends Component {
   render() {
     return (
       <Router>
         <Switch>
-          {/* <Route exact path="/" component={handTrack} /> */}
           {/* <Route exact path="/" component={handTrack} /> */}
           <Route exact path="/" component={DrawingGame} />
         </Switch>
@@ -19,5 +18,3 @@ class Routes extends Component {
     );
   }
 }
-
-export default connect()(Routes);
