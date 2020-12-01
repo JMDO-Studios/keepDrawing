@@ -1,7 +1,7 @@
 node_modules
 
-public/bundle.map.js
+public/bundle.js.map
 public/bundle.js
 
 bundle.js
-bundle.map.js
+bundle.js.map

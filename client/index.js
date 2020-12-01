@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 require('aframe');
 require('./world/components/setup');
 
@@ -16,3 +17,15 @@ camera.setAttribute('look-controls');
 
 scene.appendChild(camera);
 root.appendChild(scene);
+=======
+import imageGameLogic from './sockets/imageGame';
+import waitingRoomLogic from './sockets/waitingRoom';
+
+if (window.location.pathname === '/waitingroom') {
+  waitingRoomLogic();
+}
+
+if (window.location.pathname === '/imagegame') {
+  imageGameLogic();
+}
+>>>>>>> d002d01e2ce3f0dba86fd69e38a320bbc2af51e6

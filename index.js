@@ -1,13 +1,23 @@
-const express = require('express');
-
-const app = express();
-
 const path = require('path');
 
-app.use(express.static(path.join(__dirname, './public')));
+// express and app are being passed the websockets files so that the websocket logic
+// can be stored separately but share the same app object with the express routes,
+// otherwise the client has trobule connecting to the server-side sockets
+const {
+  express, app, http, io, websocketLogic,
+} = require('./server/websockets/websockets');
 
-app.get('*', (req, res) => {
+app.use(express.static(path.join(__dirname, '/public')));
+
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
+});
+
+// just a quick chat room to test socket.io
+app.use('/waitingroom', require('./server/rooms'));
+
+app.get('/imagegame', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/imagegame.html'));
 });
 
 app.use((req, res, next) => {
@@ -24,7 +34,10 @@ app.use((err, req, res) => {
 
 const init = () => {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+
+  io.on('connection', (socket) => websocketLogic(socket));
+
+  http.listen(PORT, () => {
     console.log(`Listening at port ${PORT}`);
   });
 };

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Image Sending Test</title>
+    <script defer src="bundle.js"></script>
+  </head>
+  <body>
+   <div id="container" style='background-color: beige;'>
+     <h5>Click on this image</h5>
+     <img src='testAssets/rightblack.jpg' style='height:200px;width:200px;'></img>
+     <hr>
+     <div id="srcImages" style='background-color: beige;'>
+       <img class='clickable' src='testAssets/black.jpg' style='height:200px;width:200px;'></img>
+       <img class='clickable' src='testAssets/white.jpg'style='height:200px;width:200px;'></img>
+       <img class='clickable' src='testAssets/leftblack.jpg'style='height:200px;width:200px;'></img>
+       <img class='clickable' src='testAssets/rightblack.jpg' style='height:200px;width:200px;'></img>
+       <img class='clickable' src='testAssets/topblack.jpg' style='height:200px;width:200px;'></img>
+       <img class='clickable' src='testAssets/bottomblack.jpg' style='height:200px;width:200px;'></img>
+     </div>
+     <h5>This image was sent</h5>
+     <img id='received' src=''></img>
+     <h5 id='matchResult'>Match percentage</h5>
+   </div>
+  </body>
+</html>
