@@ -28,6 +28,9 @@
   },
   "homepage": "https://github.com/mxavier927/keepDrawing#readme",
   "dependencies": {
+    "@babylonjs/core": "^4.2.0",
+    "@babylonjs/inspector": "^4.2.0",
+    "@babylonjs/loaders": "^4.2.0",
     "aframe": "^1.0.4",
     "axios": "^0.21.0",
     "express": "^4.17.1",
