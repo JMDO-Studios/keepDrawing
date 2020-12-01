@@ -51,6 +51,9 @@ export default class Game {
     camera.checkCollisions = true;
     camera.cameraAcceleration = 0.005;
     camera.maxCameraSpeed = 1;
+
+    camera.inputs.clear();
+    camera.inputs.addMouse();
     camera.attachControl(canvas, true);
 
     this.sphere = MeshBuilder.CreateSphere('sphere', { diameter: 0.5 }, scene);
