@@ -4,7 +4,7 @@ import '@babylonjs/loaders/glTF';
 // import { AdvancedDynamicTexture, Button, Control } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
-  StandardMaterial, Color3, FreeCamera, DynamicTexture,
+  StandardMaterial, Color3, FreeCamera, DynamicTexture, Texture,
 } from '@babylonjs/core';
 
 import io from 'socket.io-client';
@@ -41,7 +41,7 @@ export default class Game {
     const { ground } = this;
     ground.checkCollisions = true;
     const groundMat = new StandardMaterial('groundMat');
-    groundMat.diffuseColor = new Color3(0, 1, 0);
+    groundMat.diffuseTexture = new Texture('https://www.babylonjs-playground.com/textures/grass.dds', scene);
     ground.material = groundMat;
 
     this.camera = new FreeCamera('FreeCamera', new Vector3(0, 1, 0), scene);
@@ -61,11 +61,22 @@ export default class Game {
     sphere.checkCollisions = true;
     sphere.position = new Vector3(0, 1, 2);
 
-    const clue = MeshBuilder.CreatePlane('clue', { size: 0.5, sideOrientation: Mesh.DOUBLESIDE }, scene);
-    clue.position = new Vector3(sphere.position.x, sphere.position.y + 0.5, sphere.position.z);
-    const clueImage = new StandardMaterial('clueImage', scene);
-    clueImage.diffuseTexture = new DynamicTexture('DynamicTexture', { width: clue.width, height: clue.height }, scene);
-    clue.material = clueImage;
+    const ClueMesh = MeshBuilder.CreatePlane('clue', { size: 0.5, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    ClueMesh.position = new Vector3(sphere.position.x - 0.5,
+      sphere.position.y + 0.5,
+      sphere.position.z);
+    const ClueMaterial = new StandardMaterial('clueImage', scene);
+    ClueMaterial.diffuseTexture = new DynamicTexture('DynamicTexture', { width: ClueMesh.width, height: ClueMesh.height }, scene);
+    ClueMesh.material = ClueMaterial;
+
+    const receivedImageMesh = MeshBuilder.CreatePlane('clue', { size: 0.5, sideOrientation: Mesh.DOUBLESIDE }, scene);
+    receivedImageMesh.position = new Vector3(sphere.position.x + 0.5,
+      sphere.position.y + 0.5,
+      sphere.position.z);
+    const receivedImageMaterial = new StandardMaterial('clueImage', scene);
+    receivedImageMaterial.diffuseTexture = new DynamicTexture('DynamicTexture', { width: receivedImageMesh.width, height: receivedImageMesh.height }, scene);
+
+    receivedImageMesh.material = receivedImageMaterial;
 
     // hide/show the Inspector
     window.addEventListener('resize', () => {
@@ -100,6 +111,8 @@ export default class Game {
     const clickableImages = Array.from(document.getElementsByClassName('clickable'));
     // const receivedImage = document.getElementById('received');
     const matchResult = document.getElementById('matchResult');
+    const targetImage = document.getElementById('targetImage');
+    ClueMaterial.diffuseTexture.updateURL(getBase64Image(targetImage));
 
     // send to image data to server on click
     clickableImages.forEach((image) => {
@@ -116,7 +129,7 @@ export default class Game {
       // receivedImage.src = data.data;
       matchResult.innerText = `Match percentage: ${data.percent}%`;
 
-      clueImage.diffuseTexture.updateURL(data.data);
+      receivedImageMaterial.diffuseTexture.updateURL(data.data);
     });
 
     this.engine.runRenderLoop(() => {
