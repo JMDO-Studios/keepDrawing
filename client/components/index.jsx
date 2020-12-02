@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import {
   BrowserRouter as Router, Route, Switch,
 } from 'react-router-dom';
-import handTrack from './handTrack';
 import DrawingGame from './DrawingGame';
 
 export default class Routes extends Component {
@@ -10,8 +9,7 @@ export default class Routes extends Component {
     return (
       <Router>
         <Switch>
-          {/* <Route exact path="/" component={handTrack} /> */}
-          <Route exact path="/" component={DrawingGame} />
+          <Route path="/" component={DrawingGame} />
         </Switch>
       </Router>
     );

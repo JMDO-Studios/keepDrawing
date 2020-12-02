@@ -4,7 +4,7 @@ import * as handTrack from 'handtrackjs';
 const modelParams = {
   flipHorizontal: true,
   // reduce input image size for gains in speed.
-  // imageScaleFactor: 0.7,
+  imageScaleFactor: 0.7,
   // maximum number of boxes to detect
   maxNumBoxes: 1,
   iouThreshold: 0.5,
@@ -26,7 +26,7 @@ export default class DrawingGame extends Component {
     this.startVideo = this.startVideo.bind(this);
     // this.toggleVideo = this.toggleVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
-    this.startGame = this.startGame(this);
+    this.startGame = this.startGame.bind(this);
   }
 
   startVideo() {
@@ -61,15 +61,18 @@ export default class DrawingGame extends Component {
     if (model) {
       model.detect(video).then((predictions) => {
         console.log('model detected');
-        // model.renderPredictions(predictions, canvas, context, video);
         if (predictions[0]) {
-          model.renderPredictions(predictions, canvas, context, video);
-
+          // model.renderPredictions(predictions, canvas, context, video);
+          console.log(predictions);
           const hand = predictions[0].bbox;
+          const midvalx = (hand[0] + hand[2]) / 2;
+          // const gamex = document.body.clientWidth * (midvalx / canvas.width);
+          const midvaly = (hand[1] + hand[3]) / 2;
+          // const gamey = document.body.clientHeight * (midvaly / canvas.height);
           const x = hand[0];
           const y = hand[1];
-          console.log(x);
-          // context.fillRect(x, y, 1, 1);
+          // console.log(x);
+          context.fillRect(midvalx, midvaly, 1, 1);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -81,19 +84,12 @@ export default class DrawingGame extends Component {
   startGame() {
     const { startVideo, runDetection } = this;
     console.log('Start Drawing');
-    // this.setState({ message: 'Please wait...' });
-    // const [videoStatus, lmodel] = await Promise.all([
-    //   startVideo(),
-    //   handTrack.load(modelParams),
-    // ]);
-    // model = lmodel;
     handTrack.load(modelParams)
       .then((lmodel) => {
         model = lmodel;
         startVideo();
       });
     console.log('model loaded');
-    // runDetection();
 
     this.setState({ message: 'READY' });
   }
