@@ -20,7 +20,7 @@ app.get('/imagegame', (req, res) => {
   res.sendFile(path.join(__dirname, './public/imagegame.html'));
 });
 
-app.use('/token', require('./server/rooms'));
+app.use('/twilio', require('./server/twilio'));
 
 app.use((req, res, next) => {
   const err = new Error('Not found');
