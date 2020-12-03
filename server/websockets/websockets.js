@@ -12,7 +12,7 @@ function assignUserstoGame(lobbyRoster, gameRoomName) {
 
   // teamName is declared outside the for loop
   // so it can persist across iterations in the assignUser function
-  let teamName = null;
+  const teamName = null;
 
   for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
     const socketId = rosterIterator.next();
@@ -72,6 +72,7 @@ async function websocketLogic(socket) {
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = createGameRoomName();
     assignUserstoGame(lobbyRoster, gameRoomName);
+    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec });
   }
 
   socket.on('disconnect', () => {
@@ -88,4 +89,6 @@ async function websocketLogic(socket) {
   });
 }
 
-module.exports = { express, app, http, io, websocketLogic };
+module.exports = {
+  express, app, http, io, websocketLogic,
+};
