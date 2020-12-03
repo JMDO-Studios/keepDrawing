@@ -1,3 +1,6 @@
+require('dotenv').config();
+const webpack = require('webpack');
+
 module.exports = {
   entry: ["./client/index.jsx"],
   output: {
@@ -27,4 +30,7 @@ module.exports = {
       },
     ],
   },
+  plugins: [
+    new webpack.ProvidePlugin({ process: 'process' }),
+  ],
 };
