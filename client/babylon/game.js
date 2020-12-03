@@ -132,7 +132,7 @@ export default class Game {
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
 
-    // hide/show the Inspector
+
     window.addEventListener('resize', () => {
       this.engine.resize();
     });
@@ -148,6 +148,7 @@ export default class Game {
         default:
           break; // do not block other keys
       }
+      // hide/show the Inspector
       // Shift+Ctrl+Alt+I
       if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
         if (scene.debugLayer.isVisible()) {
@@ -161,7 +162,7 @@ export default class Game {
     // set up socket
     const socket = io();
 
-    // set up test image clicking functionality
+    // set up test image clicking functionality,
     const clickableImages = Array.from(document.getElementsByClassName('clickable'));
     // const receivedImage = document.getElementById('received');
     const matchResult = document.getElementById('matchResult');
@@ -183,7 +184,7 @@ export default class Game {
     /// register sockets /////////////
     // change texture of plane when receiving image data
     socket.on('imageClicked', (data) => {
-      matchResult.innerText = `Match percentage: ${data.percent}%`;
+      // matchResult.innerText = `Match percentage: ${data.percent}%`;
       drawingMesh.material.diffuseTexture.updateURL(data.data);
     });
 
