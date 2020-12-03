@@ -16,10 +16,6 @@ app.get('*', (req, res) => {
 // just a quick chat room to test socket.io
 app.use('/waitingroom', require('./server/rooms'));
 
-app.get('/imagegame', (req, res) => {
-  res.sendFile(path.join(__dirname, './public/imagegame.html'));
-});
-
 app.use('/twilio', require('./server/twilio'));
 
 app.use((req, res, next) => {

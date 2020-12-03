@@ -108,7 +108,7 @@ function createImagePlane(type, sphere, scene) {
 
 export default class Game extends React.Component {
   componentDidMount() {
-    console.log("MOUNT")
+    console.log('MOUNT');
     // create the canvas html element and attach it to the webpage
     this.canvas = createCanvas();
     const { canvas } = this;
@@ -163,21 +163,22 @@ export default class Game extends React.Component {
     // set up socket
     const socket = io();
 
-    // set up test image clicking functionality,
-    // const clickableImages = Array.from(document.getElementsByClassName('clickable'));
-    // // const receivedImage = document.getElementById('received');
+    // set up test image clicking functionality.
+
+    const clickableImages = Array.from(document.getElementsByClassName('clickable'));
+    // const receivedImage = document.getElementById('received');
     // const matchResult = document.getElementById('matchResult');
-    // const targetImage = document.getElementById('targetImage');
-    // clueMesh.material.diffuseTexture.updateURL(getBase64Image(targetImage));
+    const targetImage = document.getElementById('targetImage');
+    clueMesh.material.diffuseTexture.updateURL(getBase64Image(targetImage));
 
     // send to image data to server on click
-    // clickableImages.forEach((image) => {
-    //   image.addEventListener('click', (event) => {
-    //     socket.emit('imageClicked', {
-    //       data: getBase64Image(event.target),
-    //     });
-    //   });
-    // });
+    clickableImages.forEach((image) => {
+      image.addEventListener('click', (event) => {
+        socket.emit('imageClicked', {
+          data: getBase64Image(event.target),
+        });
+      });
+    });
 
     // create GUI
     const countdown = createGUI();
@@ -219,4 +220,3 @@ export default class Game extends React.Component {
     );
   }
 }
-
