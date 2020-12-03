@@ -1,5 +1,5 @@
 require('dotenv').config();
-const router = require('express').Router;
+const router = require('express').Router();
 
 const { AccessToken } = require('twilio').jwt;
 
