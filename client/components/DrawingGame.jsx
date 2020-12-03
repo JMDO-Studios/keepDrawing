@@ -32,13 +32,13 @@ export default class DrawingGame extends Component {
   startVideo() {
     handTrack.startVideo(video)
       .then((status) => {
-        console.log('video started', status);
+        // console.log('video started', status);
         if (status) {
           this.setState({ isVideo: true, message: 'Video started. Now tracking.' });
-          console.log('video started again...');
+          // console.log('video started again...');
           this.runDetection();
         } else {
-          console.log('please enable video');
+          // console.log('please enable video');
           this.setState({ message: 'Please enable video.' });
         }
       });
@@ -60,18 +60,15 @@ export default class DrawingGame extends Component {
     const { runDetection } = this;
     if (model) {
       model.detect(video).then((predictions) => {
-        console.log('model detected');
+        // console.log('model detected');
         if (predictions[0]) {
           // model.renderPredictions(predictions, canvas, context, video);
-          console.log(predictions);
+          // console.log(predictions);
           const hand = predictions[0].bbox;
           const midvalx = (hand[0] + hand[2]) / 2;
           // const gamex = document.body.clientWidth * (midvalx / canvas.width);
           const midvaly = (hand[1] + hand[3]) / 2;
           // const gamey = document.body.clientHeight * (midvaly / canvas.height);
-          const x = hand[0];
-          const y = hand[1];
-          // console.log(x);
           context.fillRect(midvalx, midvaly, 1, 1);
         }
         if (isVideo) {
@@ -83,15 +80,15 @@ export default class DrawingGame extends Component {
 
   startGame() {
     const { startVideo, runDetection } = this;
-    console.log('Start Drawing');
+    // console.log('Start Drawing');
     handTrack.load(modelParams)
       .then((lmodel) => {
         model = lmodel;
         startVideo();
       });
-    console.log('model loaded');
+    // console.log('model loaded');
 
-    this.setState({ message: 'READY' });
+    this.setState({ message: 'Please wait while hand tracking loads.' });
   }
 
   render() {
