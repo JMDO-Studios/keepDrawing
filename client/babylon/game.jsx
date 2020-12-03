@@ -1,3 +1,4 @@
+import React from 'react';
 import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
@@ -105,8 +106,9 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-export default class Game {
-  constructor() {
+export default class Game extends React.Component {
+  componentDidMount() {
+    console.log("MOUNT")
     // create the canvas html element and attach it to the webpage
     this.canvas = createCanvas();
     const { canvas } = this;
@@ -131,7 +133,6 @@ export default class Game {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
-
 
     window.addEventListener('resize', () => {
       this.engine.resize();
@@ -163,20 +164,20 @@ export default class Game {
     const socket = io();
 
     // set up test image clicking functionality,
-    const clickableImages = Array.from(document.getElementsByClassName('clickable'));
-    // const receivedImage = document.getElementById('received');
-    const matchResult = document.getElementById('matchResult');
-    const targetImage = document.getElementById('targetImage');
-    clueMesh.material.diffuseTexture.updateURL(getBase64Image(targetImage));
+    // const clickableImages = Array.from(document.getElementsByClassName('clickable'));
+    // // const receivedImage = document.getElementById('received');
+    // const matchResult = document.getElementById('matchResult');
+    // const targetImage = document.getElementById('targetImage');
+    // clueMesh.material.diffuseTexture.updateURL(getBase64Image(targetImage));
 
     // send to image data to server on click
-    clickableImages.forEach((image) => {
-      image.addEventListener('click', (event) => {
-        socket.emit('imageClicked', {
-          data: getBase64Image(event.target),
-        });
-      });
-    });
+    // clickableImages.forEach((image) => {
+    //   image.addEventListener('click', (event) => {
+    //     socket.emit('imageClicked', {
+    //       data: getBase64Image(event.target),
+    //     });
+    //   });
+    // });
 
     // create GUI
     const countdown = createGUI();
@@ -206,4 +207,16 @@ export default class Game {
       scene.render();
     });
   }
+
+  render() {
+    return (
+      <canvas
+        style={{ width: window.innerWidth, height: window.innerHeight }}
+        ref={(canvas) => {
+          this.canvas = canvas;
+        }}
+      />
+    );
+  }
 }
+
