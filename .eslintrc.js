@@ -21,5 +21,6 @@ module.exports = {
     'no-console': 'off',
     'react/prefer-stateless-function': 'off',
     'react/jsx-one-expression-per-line': 'off',
+    'max-len': 'off',
   },
 };
