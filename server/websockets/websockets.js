@@ -4,7 +4,7 @@ const {
   http,
   io,
 } = require('../serverbuild');
-const { getDiffTestSocket } = require('../imageCompare/getDiff');
+// const { getDiffTestSocket } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function assignUserstoGame(lobbyRoster, gameRoomName) {
@@ -83,13 +83,15 @@ async function websocketLogic(socket) {
     io.emit('chat message', `RECEIVED:${message}`);
   });
   socket.on('imageClicked', (imageData) => {
+    // commented out resemblejs test to speed up communication.
+    //  will need to be added back in on drawing submission
+    // Promise.resolve(getDiffTestSocket(imageData.data,
+    // './public/testAssets/rightblack.jpg')).then((percent) => {
+    //   socket.to(socket.teamRoom).emit('imageClicked',
+    //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
 
-    //commented out resemblejs test to speed up communication. will need to be added back in on drawing submission
-    // Promise.resolve(getDiffTestSocket(imageData.data, './public/testAssets/rightblack.jpg')).then((percent) => {
-    //   socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data, percent: 100 - percent.misMatchPercentage });
-
-    socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data});
-    });
+    socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data });
+  });
 }
 
 module.exports = {

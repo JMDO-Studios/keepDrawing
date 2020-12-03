@@ -95,7 +95,7 @@ function createImagePlane(type, sphere, scene) {
   const mesh = MeshBuilder.CreatePlane(type,
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'clue' ? sphere.position.x - 0.5 : sphere.position.x - 0.5,
+  mesh.position = new Vector3(type === 'clue' ? sphere.position.x - 0.5 : sphere.position.x + 0.5,
     sphere.position.y + 0.5,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -181,7 +181,7 @@ export default class Game {
     // create GUI
     const countdown = createGUI();
 
-    /// register sockets /////////////
+    /// register socket events /////////////
     // change texture of plane when receiving image data
     socket.on('imageClicked', (data) => {
       // matchResult.innerText = `Match percentage: ${data.percent}%`;
