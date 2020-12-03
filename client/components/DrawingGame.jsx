@@ -22,6 +22,8 @@ export default class DrawingGame extends Component {
     this.state = {
       isVideo: false,
       message: '',
+      draw: false,
+      erase: false,
     };
     this.startVideo = this.startVideo.bind(this);
     // this.toggleVideo = this.toggleVideo.bind(this);
@@ -98,6 +100,9 @@ export default class DrawingGame extends Component {
       <div>
         <div>{message}</div>
         <button type="button" onClick={startGame}>Start Drawing</button>
+        <button>Start Drawing</button>
+        <button>Stop Drawing</button>
+        <button>Erase</button>
       </div>
     );
   }
