@@ -58,7 +58,7 @@ export default class DrawingGame extends Component {
   // }
 
   runDetection() {
-    const { isVideo } = this.state;
+    const { isVideo, erase, draw } = this.state;
     const { runDetection } = this;
     if (model) {
       model.detect(video).then((predictions) => {
@@ -71,7 +71,8 @@ export default class DrawingGame extends Component {
           // const gamex = document.body.clientWidth * (midvalx / canvas.width);
           const midvaly = (hand[1] + hand[3]) / 2;
           // const gamey = document.body.clientHeight * (midvaly / canvas.height);
-          context.fillRect(midvalx, midvaly, 1, 1);
+          if (draw) context.fillRect(midvalx, midvaly, 1, 1);
+          if (erase) context.clearRect(midvalx, midvaly, 1, 1);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -81,7 +82,7 @@ export default class DrawingGame extends Component {
   }
 
   startGame() {
-    const { startVideo, runDetection } = this;
+    const { startVideo } = this;
     // console.log('Start Drawing');
     handTrack.load(modelParams)
       .then((lmodel) => {
@@ -94,15 +95,15 @@ export default class DrawingGame extends Component {
   }
 
   render() {
-    const { startGame } = this;
+    // const { startGame } = this;
     const { message } = this.state;
     return (
       <div>
         <div>{message}</div>
-        <button type="button" onClick={startGame}>Start Drawing</button>
-        <button>Start Drawing</button>
-        <button>Stop Drawing</button>
-        <button>Erase</button>
+        {/* <button type="button" onClick={startGame}>Start Drawing</button> */}
+        <button type="button">Start Drawing</button>
+        <button type="button">Stop Drawing</button>
+        <button type="button">Erase</button>
       </div>
     );
   }
