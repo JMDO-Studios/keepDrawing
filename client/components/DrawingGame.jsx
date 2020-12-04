@@ -71,7 +71,7 @@ export default class DrawingGame extends Component {
           // const gamex = document.body.clientWidth * (midvalx / canvas.width);
           const midvaly = (hand[1] + hand[3]) / 2;
           // const gamey = document.body.clientHeight * (midvaly / canvas.height);
-          context.fillRect(midvalx, midvaly, 1, 1);
+          context.fillRect(midvalx, midvaly, 10, 10);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);

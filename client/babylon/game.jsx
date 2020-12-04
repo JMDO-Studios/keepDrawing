@@ -100,7 +100,8 @@ function createImagePlane(type, sphere, scene) {
     sphere.position.y + 0.5,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
-  material.diffuseTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
+  material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
+  material.opacityTexture.hasAlpha = true;
   mesh.material = material;
 
   return mesh;
@@ -108,7 +109,6 @@ function createImagePlane(type, sphere, scene) {
 
 export default class Game extends React.Component {
   componentDidMount() {
-    console.log('MOUNT');
     // create the canvas html element and attach it to the webpage
     this.canvas = createCanvas();
     const { canvas } = this;
@@ -163,13 +163,12 @@ export default class Game extends React.Component {
     // set up socket
     const socket = io();
 
-    // set up test image clicking functionality.
-
+    // set up test image clicking functionality. can be removed when we don't need to use static images
     const clickableImages = Array.from(document.getElementsByClassName('clickable'));
     // const receivedImage = document.getElementById('received');
     // const matchResult = document.getElementById('matchResult');
     const targetImage = document.getElementById('targetImage');
-    clueMesh.material.diffuseTexture.updateURL(getBase64Image(targetImage));
+    clueMesh.material.opacityTexture.updateURL(getBase64Image(targetImage));
 
     // send to image data to server on click
     clickableImages.forEach((image) => {
@@ -180,6 +179,16 @@ export default class Game extends React.Component {
       });
     });
 
+    /// remove the above when we don't need to test with static images anymore
+
+    // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
+    scene.onBeforeRenderObservable.add(() => {
+      const handImage = document.getElementById('canvas');
+      socket.emit('imageClicked', {
+        data: handImage.toDataURL(),
+      });
+    });
+
     // create GUI
     const countdown = createGUI();
 
@@ -187,7 +196,7 @@ export default class Game extends React.Component {
     // change texture of plane when receiving image data
     socket.on('imageClicked', (data) => {
       // matchResult.innerText = `Match percentage: ${data.percent}%`;
-      drawingMesh.material.diffuseTexture.updateURL(data.data);
+      drawingMesh.material.opacityTexture.updateURL(data.data);
     });
 
     // start clock
