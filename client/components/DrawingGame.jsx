@@ -3,9 +3,7 @@ import * as handTrack from 'handtrackjs';
 
 const modelParams = {
   flipHorizontal: true,
-  // reduce input image size for gains in speed.
-  imageScaleFactor: 0.7,
-  // maximum number of boxes to detect
+  imageScaleFactor: 1.0,
   maxNumBoxes: 1,
   iouThreshold: 0.5,
   scoreThreshold: 0.75,
@@ -13,49 +11,28 @@ const modelParams = {
 
 let model = null;
 const video = document.getElementById('myVideo');
-const canvas = document.getElementById('canvas');
-const context = canvas.getContext('2d');
+const drawingCanvas = document.getElementById('drawingCanvas');
+const handCanvas = document.getElementById('handCanvas');
+const drawingContext = drawingCanvas.getContext('2d');
+const handContext = handCanvas.getContext('2d');
 
 export default class DrawingGame extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isVideo: false,
-      message: '',
       draw: false,
       erase: false,
     };
     this.startVideo = this.startVideo.bind(this);
-    // this.toggleVideo = this.toggleVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
     this.startGame = this.startGame.bind(this);
+    this.handleButton = this.handleButton.bind(this);
   }
 
-  startVideo() {
-    handTrack.startVideo(video)
-      .then((status) => {
-        // console.log('video started', status);
-        if (status) {
-          this.setState({ isVideo: true, message: 'Video started. Now tracking.' });
-          // console.log('video started again...');
-          this.runDetection();
-        } else {
-          // console.log('please enable video');
-          this.setState({ message: 'Please enable video.' });
-        }
-      });
+  handleButton(drawStatus, eraseStatus) {
+    this.setState({ draw: drawStatus, erase: eraseStatus });
   }
-
-  // toggleVideo() {
-  //   const { isVideo } = this.state;
-  //   if (!isVideo) {
-  //     this.setState({ message: 'Starting video.' });
-  //     this.startVideo();
-  //   } else {
-  //     this.setState({ isVideo: false, message: 'Video stopped' });
-  //     handTrack.stopVideo(video);
-  //   }
-  // }
 
   runDetection() {
     const { isVideo, erase, draw } = this.state;
@@ -63,16 +40,18 @@ export default class DrawingGame extends Component {
     if (model) {
       model.detect(video).then((predictions) => {
         // console.log('model detected');
+        model.renderPredictions(predictions, handCanvas, handContext, video);
         if (predictions[0]) {
-          // model.renderPredictions(predictions, canvas, context, video);
           // console.log(predictions);
           const hand = predictions[0].bbox;
-          const midvalx = (hand[0] + hand[2]) / 2;
+          const midValX = (hand[0] + hand[2]) / 2;
           // const gamex = document.body.clientWidth * (midvalx / canvas.width);
-          const midvaly = (hand[1] + hand[3]) / 2;
+          const midValY = (hand[1] + hand[3]) / 2;
+          // const x = hand[0];
+          // const y = hand[0];
           // const gamey = document.body.clientHeight * (midvaly / canvas.height);
-          if (draw) context.fillRect(midvalx, midvaly, 1, 1);
-          if (erase) context.clearRect(midvalx, midvaly, 1, 1);
+          if (draw) drawingContext.fillRect(midValX, midValY, 3, 3);
+          if (erase) drawingContext.clearRect(midValX, midValY, 3, 3);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -81,29 +60,38 @@ export default class DrawingGame extends Component {
     }
   }
 
+  startVideo() {
+    handTrack.startVideo(video)
+      .then((status) => {
+        // console.log('Video Started');
+        if (status) {
+          this.setState({ isVideo: true });
+          console.log('video started again...');
+          this.runDetection();
+        } else {
+          console.log('please enable video');
+        }
+      });
+  }
+
   startGame() {
     const { startVideo } = this;
-    // console.log('Start Drawing');
+    // console.log('Game Started');
     handTrack.load(modelParams)
       .then((lmodel) => {
         model = lmodel;
         startVideo();
       });
-    // console.log('model loaded');
-
-    this.setState({ message: 'Please wait while hand tracking loads.' });
   }
 
   render() {
-    // const { startGame } = this;
-    const { message } = this.state;
+    const { startGame, handleButton } = this;
+    startGame();
     return (
       <div>
-        <div>{message}</div>
-        {/* <button type="button" onClick={startGame}>Start Drawing</button> */}
-        <button type="button">Start Drawing</button>
-        <button type="button">Stop Drawing</button>
-        <button type="button">Erase</button>
+        <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
+        <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
+        <button type="button" onClick={() => (handleButton(false, true))}>Erase</button>
       </div>
     );
   }
