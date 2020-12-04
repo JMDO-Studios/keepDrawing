@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import * as handTrack from 'handtrackjs';
+import ThreeDGame from '../babylon/game';
+import TestAssets from './TestAssets';
 
 const modelParams = {
   flipHorizontal: true,
@@ -69,7 +71,7 @@ export default class DrawingGame extends Component {
           // const gamex = document.body.clientWidth * (midvalx / canvas.width);
           const midvaly = (hand[1] + hand[3]) / 2;
           // const gamey = document.body.clientHeight * (midvaly / canvas.height);
-          context.fillRect(midvalx, midvaly, 1, 1);
+          context.fillRect(midvalx, midvaly, 10, 10);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -98,6 +100,8 @@ export default class DrawingGame extends Component {
       <div>
         <div>{message}</div>
         <button type="button" onClick={startGame}>Start Drawing</button>
+        <TestAssets />
+        <ThreeDGame />
       </div>
     );
   }

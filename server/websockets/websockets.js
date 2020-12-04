@@ -4,7 +4,7 @@ const {
   http,
   io,
 } = require('../serverbuild');
-const { getDiffTestSocket } = require('../imageCompare/getDiff');
+// const { getDiffTestSocket } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function assignUserstoGame(lobbyRoster, gameRoomName) {
@@ -12,7 +12,7 @@ function assignUserstoGame(lobbyRoster, gameRoomName) {
 
   // teamName is declared outside the for loop
   // so it can persist across iterations in the assignUser function
-  let teamName = null;
+  const teamName = null;
 
   for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
     const socketId = rosterIterator.next();
@@ -72,6 +72,7 @@ async function websocketLogic(socket) {
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = createGameRoomName();
     assignUserstoGame(lobbyRoster, gameRoomName);
+    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec });
   }
 
   socket.on('disconnect', () => {
@@ -82,10 +83,17 @@ async function websocketLogic(socket) {
     io.emit('chat message', `RECEIVED:${message}`);
   });
   socket.on('imageClicked', (imageData) => {
-    Promise.resolve(getDiffTestSocket(imageData.data, './public/testAssets/rightblack.jpg')).then((percent) => {
-      socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data, percent: 100 - percent.misMatchPercentage });
-    });
+    // commented out resemblejs test to speed up communication.
+    //  will need to be added back in on drawing submission
+    // Promise.resolve(getDiffTestSocket(imageData.data,
+    // './public/testAssets/rightblack.jpg')).then((percent) => {
+    //   socket.to(socket.teamRoom).emit('imageClicked',
+    //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
+
+    socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data });
   });
 }
 
-module.exports = { express, app, http, io, websocketLogic };
+module.exports = {
+  express, app, http, io, websocketLogic,
+};
