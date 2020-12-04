@@ -9,6 +9,9 @@ module.exports = {
   },
   resolve: {
     extensions: [".js", ".jsx"],
+    fallback: {
+      crypto: false,
+    },
   },
   devtool: "source-map",
   watchOptions: {
