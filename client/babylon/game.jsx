@@ -94,8 +94,7 @@ function redrawTexture(mesh, newURL, currentURL) {
 
 export default class Game extends React.Component {
   componentDidMount() {
-    // create the canvas html element and attach it to the webpage
-    // this.canvas = createCanvas();
+    // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
