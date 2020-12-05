@@ -30,16 +30,6 @@ function createGUI() {
   return x;
 }
 
-function createCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
-  canvas.id = 'gameCanvas';
-  document.body.appendChild(canvas);
-
-  return canvas;
-}
-
 function initializeScene(canvas) {
   const engine = new Engine(canvas, true);
   const scene = new Scene(engine);
@@ -105,7 +95,8 @@ function redrawTexture(mesh, newURL, currentURL) {
 export default class Game extends React.Component {
   componentDidMount() {
     // create the canvas html element and attach it to the webpage
-    this.canvas = createCanvas();
+    // this.canvas = createCanvas();
+    this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
     // create babylon engine, build and customize scene
@@ -216,12 +207,7 @@ export default class Game extends React.Component {
 
   render() {
     return (
-      <canvas
-        style={{ width: window.innerWidth, height: window.innerHeight }}
-        ref={(canvas) => {
-          this.canvas = canvas;
-        }}
-      />
+      <canvas id="gameCanvas" style={{ width: '100%', height: '100%' }} />
     );
   }
 }
