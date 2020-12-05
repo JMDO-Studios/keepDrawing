@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const {
   express,
   app,
@@ -6,6 +8,27 @@ const {
 } = require('../serverbuild');
 // const { getDiffTestSocket } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
+
+
+function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
+  return gameRoomName + idOfFirstTeamMate;
+}
+
+function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
+  // teamName is initialized in AssignUserstoGame
+  teamName = rosterIdx % bombGameSettings.teamSize === 0
+    ? createTeamRoomName(gameRoomName, socket.id)
+    : teamName;
+
+  console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameRoomName}`);
+
+  try {
+    socket.join(teamName);
+    socket.teamRoom = teamName;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 function assignUserstoGame(lobbyRoster, gameRoomName) {
   const rosterIterator = lobbyRoster.values();
@@ -41,29 +64,40 @@ function createGameRoomName(name = '', offset = 0) {
   return gameRoomName;
 }
 
-function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
-  return gameRoomName + idOfFirstTeamMate;
-}
-
-function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
-  // teamName is initialized in AssignUserstoGame
-  teamName = rosterIdx % bombGameSettings.teamSize === 0
-    ? createTeamRoomName(gameRoomName, socket.id)
-    : teamName;
-
-  console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameRoomName}`);
-
-  try {
-    socket.join(teamName);
-    socket.teamRoom = teamName;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 function getIdsOfSocketsInRoom(roomName) {
   return io.sockets.adapter.rooms.get(roomName);
 }
+
+function getBase64Image(img) {
+  const c = document.createElement('canvas');
+  c.height = img.naturalHeight;
+  c.width = img.naturalWidth;
+  const ctx = c.getContext('2d');
+
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+
+function generateURLArray(directoryPath) {
+  const urls = [];
+  fs.readdirSync(directoryPath, (err, files) => {
+    if (err) {
+      throw new Error('unable to read directory');
+    }
+
+    files.forEach((file) => {
+      urls.push(getBase64Image(file));
+    });
+  });
+  return urls;
+}
+
+function randomURL(urlArray) {
+  return urlArray[Math.floor(Math.random() * urlArray.length - 1)];
+}
+
+const clueDirectoryPath = path.join(__dirname, '../assets/clues');
+const clueUrls = generateURLArray(clueDirectoryPath);
 
 async function websocketLogic(socket) {
   socket.join('lobby');
@@ -72,7 +106,7 @@ async function websocketLogic(socket) {
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = createGameRoomName();
     assignUserstoGame(lobbyRoster, gameRoomName);
-    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec });
+    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec, clueURL: randomURL(clueUrls) });
   }
 
   socket.on('disconnect', () => {
@@ -82,15 +116,14 @@ async function websocketLogic(socket) {
   socket.on('chat message', (message) => {
     io.emit('chat message', `RECEIVED:${message}`);
   });
-  socket.on('imageClicked', (imageData) => {
+  socket.on('drawingChanged', (payLoad) => {
     // commented out resemblejs test to speed up communication.
     //  will need to be added back in on drawing submission
     // Promise.resolve(getDiffTestSocket(imageData.data,
     // './public/testAssets/rightblack.jpg')).then((percent) => {
     //   socket.to(socket.teamRoom).emit('imageClicked',
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
-
-    socket.to(socket.teamRoom).emit('imageClicked', { data: imageData.data });
+    socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
 }
 

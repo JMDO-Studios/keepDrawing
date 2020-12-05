@@ -12,16 +12,6 @@ import {
 
 import io from 'socket.io-client';
 
-function getBase64Image(img) {
-  const c = document.createElement('canvas');
-  c.height = img.naturalHeight;
-  c.width = img.naturalWidth;
-  const ctx = c.getContext('2d');
-
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  return c.toDataURL();
-}
-
 function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   const x = new TextBlock('TextBlock', 'Get Ready!');
@@ -107,8 +97,14 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
+
+
 export default class Game extends React.Component {
   componentDidMount() {
+    function redrawTexture(mesh, newUrl, currentUrl) {
+      currentUrl = newUrl;
+      mesh.material.opacityTexture.updateURL(currentUrl);
+    }
     // create the canvas html element and attach it to the webpage
     this.canvas = createCanvas();
     const { canvas } = this;
@@ -133,6 +129,11 @@ export default class Game extends React.Component {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
+
+    // initialize plane texture URLs
+    this.currentClueURL = '';
+    this.lastSentDrawingURL = '';
+    this.lastReceivedDrawingURL = '';
 
     window.addEventListener('resize', () => {
       this.engine.resize();
@@ -166,9 +167,15 @@ export default class Game extends React.Component {
     // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
     scene.onBeforeRenderObservable.add(() => {
       const handImage = document.getElementById('canvas');
-      socket.emit('imageClicked', {
-        data: handImage.toDataURL(),
-      });
+      const imageURL = handImage.toDataURL();
+      if (imageURL !== this.lastSentDrawingURL) {
+        console.log(`drawings different ++++ ${imageURL} ++++ ${this.lastSentDrawingURL}`);
+
+        this.lastSentDrawingURL = imageURL;
+        socket.emit('drawingChanged', {
+          imageData: imageURL,
+        });
+      }
     });
 
     // create GUI
@@ -176,18 +183,28 @@ export default class Game extends React.Component {
 
     /// register socket events /////////////
     // change texture of plane when receiving image data
-    socket.on('imageClicked', (data) => {
+    socket.on('drawingChanged', ({ drawingURL }) => {
+      // console.log("recevied event")
+      // console.log('lastreceived drawing', this.lastReceivedDrawingURL);
+      // console.log('new url', drawingURL)
+      if (drawingURL !== this.lastReceivedDrawingURL) {
+        // console.log("urls are different")
       // matchResult.innerText = `Match percentage: ${data.percent}%`;
-      drawingMesh.material.opacityTexture.updateURL(data.data);
+        redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
+      }
     });
 
-    // change texter of clue when receiving image data
-    socket.on('newClue', (data) => {
-      clueMesh.material.opacityTexture.updateURL(data.data);
+    // change texture of clue when receiving image data
+    socket.on('newClue', ({ clueUrl }) => {
+      if (clueUrl !== this.currentClueURL) {
+        redrawTexture(clueMesh, clueUrl, this.currentClueURL);
+      }
     });
 
     // start clock
-    socket.on('startClock', ({ time }) => {
+    socket.on('startClock', ({ time, clueUrl }) => {
+      redrawTexture(clueMesh, clueUrl, this.currentClueURL);
+
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
