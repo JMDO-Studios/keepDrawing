@@ -8,7 +8,7 @@ const modelParams = {
   imageScaleFactor: 1.0,
   maxNumBoxes: 1,
   iouThreshold: 0.5,
-  scoreThreshold: 0.80,
+  scoreThreshold: 0.70,
 };
 
 let model = null;
