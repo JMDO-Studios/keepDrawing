@@ -97,11 +97,10 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-function redrawTexture(mesh, newUrl, currentUrl) {
-  currentUrl = newUrl;
-  mesh.material.opacityTexture.updateURL(currentUrl);
+function redrawTexture(mesh, newURL, currentURL) {
+  currentURL = newURL;
+  mesh.material.opacityTexture.updateURL(newURL);
 }
-
 
 export default class Game extends React.Component {
   componentDidMount() {
@@ -188,15 +187,15 @@ export default class Game extends React.Component {
     });
 
     // change texture of clue when receiving image data
-    socket.on('newClue', ({ clueUrl }) => {
-      if (clueUrl !== this.currentClueURL) {
-        redrawTexture(clueMesh, clueUrl, this.currentClueURL);
+    socket.on('newClue', ({ clueURL }) => {
+      if (clueURL !== this.currentClueURL) {
+        redrawTexture(clueMesh, clueURL, this.currentClueURL);
       }
     });
 
     // start clock
-    socket.on('startClock', ({ time, clueUrl }) => {
-      redrawTexture(clueMesh, clueUrl, this.currentClueURL);
+    socket.on('startClock', ({ time, clueURL }) => {
+      redrawTexture(clueMesh, clueURL, this.currentClueURL);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {

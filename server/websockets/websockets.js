@@ -9,7 +9,6 @@ const {
 // const { getDiffTestSocket } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
-
 function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
   return gameRoomName + idOfFirstTeamMate;
 }
@@ -68,36 +67,23 @@ function getIdsOfSocketsInRoom(roomName) {
   return io.sockets.adapter.rooms.get(roomName);
 }
 
-function getBase64Image(img) {
-  const c = document.createElement('canvas');
-  c.height = img.naturalHeight;
-  c.width = img.naturalWidth;
-  const ctx = c.getContext('2d');
-
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  return c.toDataURL('image/png');
-}
-
 function generateURLArray(directoryPath) {
   const urls = [];
-  fs.readdirSync(directoryPath, (err, files) => {
-    if (err) {
-      throw new Error('unable to read directory');
-    }
-
-    files.forEach((file) => {
-      urls.push(getBase64Image(file));
-    });
+  const fileNames = fs.readdirSync(directoryPath);
+  fileNames.forEach((file) => {
+    const bitmap = fs.readFileSync(`${directoryPath}\\${file}`, { encoding: 'base64' });
+    urls.push(`data:image/png;base64,${bitmap}`);
   });
   return urls;
 }
 
-function randomURL(urlArray) {
-  return urlArray[Math.floor(Math.random() * urlArray.length - 1)];
+function generateRandomURL(urlArray) {
+  const rIdx = Math.floor(Math.random() * urlArray.length);
+  return urlArray[rIdx];
 }
 
 const clueDirectoryPath = path.join(__dirname, '../assets/clues');
-const clueUrls = generateURLArray(clueDirectoryPath);
+const clueURLs = generateURLArray(clueDirectoryPath);
 
 async function websocketLogic(socket) {
   socket.join('lobby');
@@ -106,7 +92,7 @@ async function websocketLogic(socket) {
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = createGameRoomName();
     assignUserstoGame(lobbyRoster, gameRoomName);
-    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec, clueURL: randomURL(clueUrls) });
+    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec, clueURL: generateRandomURL(clueURLs) });
   }
 
   socket.on('disconnect', () => {
