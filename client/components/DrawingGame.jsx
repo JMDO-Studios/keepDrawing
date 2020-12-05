@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import * as handTrack from 'handtrackjs';
-import ThreeDGame from '../babylon/game';
-import TestAssets from './TestAssets';
+import ThreeDScene from '../babylon/game';
 
 const modelParams = {
   flipHorizontal: true,
@@ -48,7 +47,7 @@ export default class DrawingGame extends Component {
           const hand = predictions[0].bbox;
           const midValX = hand[0] + (hand[2] / 2);
           const midValY = hand[1] + (hand[3] / 2);
-          if (draw) drawingContext.fillRect(midValX, midValY, 3, 3);
+          if (draw) drawingContext.fillRect(midValX, midValY, 10, 10);
           if (erase) drawingContext.clearRect(midValX, midValY, 10, 10);
         }
         if (isVideo) {
@@ -89,8 +88,7 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
-        <TestAssets />
-        <ThreeDGame />
+        <ThreeDScene />
       </div>
     );
   }

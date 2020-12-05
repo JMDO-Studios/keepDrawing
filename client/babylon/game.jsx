@@ -12,16 +12,6 @@ import {
 
 import io from 'socket.io-client';
 
-function getBase64Image(img) {
-  const c = document.createElement('canvas');
-  c.height = img.naturalHeight;
-  c.width = img.naturalWidth;
-  const ctx = c.getContext('2d');
-
-  ctx.drawImage(img, 0, 0, c.width, c.height);
-  return c.toDataURL();
-}
-
 function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   const x = new TextBlock('TextBlock', 'Get Ready!');
@@ -107,6 +97,11 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
+function redrawTexture(mesh, newURL, currentURL) {
+  currentURL = newURL;
+  mesh.material.opacityTexture.updateURL(newURL);
+}
+
 export default class Game extends React.Component {
   componentDidMount() {
     // create the canvas html element and attach it to the webpage
@@ -133,6 +128,11 @@ export default class Game extends React.Component {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
+
+    // initialize plane texture URLs
+    this.currentClueURL = '';
+    this.lastSentDrawingURL = '';
+    this.lastReceivedDrawingURL = '';
 
     window.addEventListener('resize', () => {
       this.engine.resize();
@@ -163,30 +163,16 @@ export default class Game extends React.Component {
     // set up socket
     const socket = io();
 
-    // set up test image clicking functionality. can be removed when we don't need to use static images
-    const clickableImages = Array.from(document.getElementsByClassName('clickable'));
-    // const receivedImage = document.getElementById('received');
-    // const matchResult = document.getElementById('matchResult');
-    const targetImage = document.getElementById('targetImage');
-    clueMesh.material.opacityTexture.updateURL(getBase64Image(targetImage));
-
-    // send to image data to server on click
-    clickableImages.forEach((image) => {
-      image.addEventListener('click', (event) => {
-        socket.emit('imageClicked', {
-          data: getBase64Image(event.target),
-        });
-      });
-    });
-
-    /// remove the above when we don't need to test with static images anymore
-
     // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
     scene.onBeforeRenderObservable.add(() => {
-      const handImage = document.getElementById('canvas');
-      socket.emit('imageClicked', {
-        data: handImage.toDataURL(),
-      });
+      const handImage = document.getElementById('drawingCanvas');
+      const imageURL = handImage.toDataURL();
+      if (imageURL !== this.lastSentDrawingURL) {
+        this.lastSentDrawingURL = imageURL;
+        socket.emit('drawingChanged', {
+          imageData: imageURL,
+        });
+      }
     });
 
     // create GUI
@@ -194,13 +180,23 @@ export default class Game extends React.Component {
 
     /// register socket events /////////////
     // change texture of plane when receiving image data
-    socket.on('imageClicked', (data) => {
-      // matchResult.innerText = `Match percentage: ${data.percent}%`;
-      drawingMesh.material.opacityTexture.updateURL(data.data);
+    socket.on('drawingChanged', ({ drawingURL }) => {
+      if (drawingURL !== this.lastReceivedDrawingURL) {
+        redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
+      }
+    });
+
+    // change texture of clue when receiving image data
+    socket.on('newClue', ({ clueURL }) => {
+      if (clueURL !== this.currentClueURL) {
+        redrawTexture(clueMesh, clueURL, this.currentClueURL);
+      }
     });
 
     // start clock
-    socket.on('startClock', ({ time }) => {
+    socket.on('startClock', ({ time, clueURL }) => {
+      redrawTexture(clueMesh, clueURL, this.currentClueURL);
+
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
