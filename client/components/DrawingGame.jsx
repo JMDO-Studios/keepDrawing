@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import * as handTrack from 'handtrackjs';
+import ThreeDGame from '../babylon/game';
+import TestAssets from './TestAssets';
 
 const modelParams = {
   flipHorizontal: true,
@@ -87,6 +89,8 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
+        <TestAssets />
+        <ThreeDGame />
       </div>
     );
   }

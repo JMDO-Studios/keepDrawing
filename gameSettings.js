@@ -1,6 +1,7 @@
 const bombGameSettings = {
-  gameSize: 4,
+  gameSize: 2,
   teamSize: 2,
+  startClockinSec: 5,
 };
 
 module.exports = { bombGameSettings };
