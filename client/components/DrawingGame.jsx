@@ -23,7 +23,6 @@ export default class DrawingGame extends Component {
       isVideo: false,
       draw: false,
       erase: false,
-      clear: false,
     };
     this.startVideo = this.startVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
@@ -31,18 +30,17 @@ export default class DrawingGame extends Component {
     this.handleButton = this.handleButton.bind(this);
   }
 
-  handleButton(drawStatus, eraseStatus, clearStatus) {
-    this.setState({ draw: drawStatus, erase: eraseStatus, clear: clearStatus });
+  handleButton(drawStatus, eraseStatus) {
+    this.setState({ draw: drawStatus, erase: eraseStatus });
   }
 
   runDetection() {
     const {
-      isVideo, erase, draw, clear,
+      isVideo, erase, draw,
     } = this.state;
     const { runDetection } = this;
     if (model) {
       model.detect(video).then((predictions) => {
-        // console.log('model detected');
         model.renderPredictions(predictions, handCanvas, handContext, video);
         if (predictions[0]) {
           // console.log(predictions);
@@ -56,7 +54,6 @@ export default class DrawingGame extends Component {
           if (draw) drawingContext.fillRect(midValX, midValY, 3, 3);
           // if (draw) drawingContext.fillRect(gameX, gameY, 3, 3);
           if (erase) drawingContext.clearRect(midValX, midValY, 10, 10);
-          if (clear) drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -68,10 +65,8 @@ export default class DrawingGame extends Component {
   startVideo() {
     handTrack.startVideo(video)
       .then((status) => {
-        // console.log('Video Started');
         if (status) {
           this.setState({ isVideo: true });
-          console.log('video started again...');
           this.runDetection();
         } else {
           console.log('please enable video');
@@ -81,7 +76,6 @@ export default class DrawingGame extends Component {
 
   startGame() {
     const { startVideo } = this;
-    // console.log('Game Started');
     handTrack.load(modelParams)
       .then((lmodel) => {
         model = lmodel;
@@ -95,10 +89,10 @@ export default class DrawingGame extends Component {
     if (!isVideo) startGame();
     return (
       <div>
-        <button type="button" onClick={() => handleButton(true, false, false)}>Start Drawing</button>
-        <button type="button" onClick={() => handleButton(false, false, false)}>Stop Drawing</button>
-        <button type="button" onClick={() => (handleButton(false, true, false))}>Erase</button>
-        <button type="button" onClick={() => handleButton(false, false, true)}>Clear</button>
+        <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
+        <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
+        <button type="button" onClick={() => (handleButton(false, true))}>Erase</button>
+        <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
       </div>
     );
   }
