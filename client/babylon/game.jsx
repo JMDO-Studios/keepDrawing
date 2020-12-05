@@ -165,7 +165,7 @@ export default class Game extends React.Component {
 
     // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
     scene.onBeforeRenderObservable.add(() => {
-      const handImage = document.getElementById('canvas');
+      const handImage = document.getElementById('drawingCanvas');
       const imageURL = handImage.toDataURL();
       if (imageURL !== this.lastSentDrawingURL) {
         this.lastSentDrawingURL = imageURL;
