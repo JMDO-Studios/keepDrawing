@@ -71,7 +71,7 @@ function generateURLArray(directoryPath) {
   const urls = [];
   const fileNames = fs.readdirSync(directoryPath);
   fileNames.forEach((file) => {
-    const bitmap = fs.readFileSync(`${directoryPath}\\${file}`, { encoding: 'base64' });
+    const bitmap = fs.readFileSync(path.join(directoryPath, file), { encoding: 'base64' });
     urls.push(`data:image/png;base64,${bitmap}`);
   });
   return urls;
