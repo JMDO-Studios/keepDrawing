@@ -6,7 +6,7 @@ const modelParams = {
   imageScaleFactor: 1.0,
   maxNumBoxes: 1,
   iouThreshold: 0.5,
-  scoreThreshold: 0.75,
+  scoreThreshold: 0.80,
 };
 
 let model = null;
@@ -43,16 +43,10 @@ export default class DrawingGame extends Component {
       model.detect(video).then((predictions) => {
         model.renderPredictions(predictions, handCanvas, handContext, video);
         if (predictions[0]) {
-          // console.log(predictions);
           const hand = predictions[0].bbox;
-          const midValX = (hand[0] + hand[2]) / 2;
-          const gameX = document.body.clientWidth * (midValX / drawingCanvas.width);
-          const midValY = (hand[1] + hand[3]) / 2;
-          // const x = hand[0];
-          // const y = hand[0];
-          const gameY = document.body.clientHeight * (midValY / drawingCanvas.height);
+          const midValX = hand[0] + (hand[2] / 2);
+          const midValY = hand[1] + (hand[3] / 2);
           if (draw) drawingContext.fillRect(midValX, midValY, 3, 3);
-          // if (draw) drawingContext.fillRect(gameX, gameY, 3, 3);
           if (erase) drawingContext.clearRect(midValX, midValY, 10, 10);
         }
         if (isVideo) {
@@ -91,7 +85,7 @@ export default class DrawingGame extends Component {
       <div>
         <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
-        <button type="button" onClick={() => (handleButton(false, true))}>Erase</button>
+        <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
       </div>
     );
