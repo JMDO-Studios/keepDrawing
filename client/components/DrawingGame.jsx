@@ -23,6 +23,7 @@ export default class DrawingGame extends Component {
       isVideo: false,
       draw: false,
       erase: false,
+      clear: false,
     };
     this.startVideo = this.startVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
@@ -30,12 +31,14 @@ export default class DrawingGame extends Component {
     this.handleButton = this.handleButton.bind(this);
   }
 
-  handleButton(drawStatus, eraseStatus) {
-    this.setState({ draw: drawStatus, erase: eraseStatus });
+  handleButton(drawStatus, eraseStatus, clearStatus) {
+    this.setState({ draw: drawStatus, erase: eraseStatus, clear: clearStatus });
   }
 
   runDetection() {
-    const { isVideo, erase, draw } = this.state;
+    const {
+      isVideo, erase, draw, clear,
+    } = this.state;
     const { runDetection } = this;
     if (model) {
       model.detect(video).then((predictions) => {
@@ -45,13 +48,15 @@ export default class DrawingGame extends Component {
           // console.log(predictions);
           const hand = predictions[0].bbox;
           const midValX = (hand[0] + hand[2]) / 2;
-          // const gamex = document.body.clientWidth * (midvalx / canvas.width);
+          const gameX = document.body.clientWidth * (midValX / drawingCanvas.width);
           const midValY = (hand[1] + hand[3]) / 2;
           // const x = hand[0];
           // const y = hand[0];
-          // const gamey = document.body.clientHeight * (midvaly / canvas.height);
+          const gameY = document.body.clientHeight * (midValY / drawingCanvas.height);
           if (draw) drawingContext.fillRect(midValX, midValY, 3, 3);
-          if (erase) drawingContext.clearRect(midValX, midValY, 3, 3);
+          // if (draw) drawingContext.fillRect(gameX, gameY, 3, 3);
+          if (erase) drawingContext.clearRect(midValX, midValY, 10, 10);
+          if (clear) drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         }
         if (isVideo) {
           window.requestAnimationFrame(runDetection);
@@ -85,13 +90,15 @@ export default class DrawingGame extends Component {
   }
 
   render() {
-    const { startGame, handleButton } = this;
-    startGame();
+    const { handleButton, startGame } = this;
+    const { isVideo } = this.state;
+    if (!isVideo) startGame();
     return (
       <div>
-        <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
-        <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
-        <button type="button" onClick={() => (handleButton(false, true))}>Erase</button>
+        <button type="button" onClick={() => handleButton(true, false, false)}>Start Drawing</button>
+        <button type="button" onClick={() => handleButton(false, false, false)}>Stop Drawing</button>
+        <button type="button" onClick={() => (handleButton(false, true, false))}>Erase</button>
+        <button type="button" onClick={() => handleButton(false, false, true)}>Clear</button>
       </div>
     );
   }
