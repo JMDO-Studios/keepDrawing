@@ -97,14 +97,14 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
+function redrawTexture(mesh, newUrl, currentUrl) {
+  currentUrl = newUrl;
+  mesh.material.opacityTexture.updateURL(currentUrl);
+}
 
 
 export default class Game extends React.Component {
   componentDidMount() {
-    function redrawTexture(mesh, newUrl, currentUrl) {
-      currentUrl = newUrl;
-      mesh.material.opacityTexture.updateURL(currentUrl);
-    }
     // create the canvas html element and attach it to the webpage
     this.canvas = createCanvas();
     const { canvas } = this;
@@ -169,8 +169,6 @@ export default class Game extends React.Component {
       const handImage = document.getElementById('canvas');
       const imageURL = handImage.toDataURL();
       if (imageURL !== this.lastSentDrawingURL) {
-        console.log(`drawings different ++++ ${imageURL} ++++ ${this.lastSentDrawingURL}`);
-
         this.lastSentDrawingURL = imageURL;
         socket.emit('drawingChanged', {
           imageData: imageURL,
@@ -184,12 +182,7 @@ export default class Game extends React.Component {
     /// register socket events /////////////
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      // console.log("recevied event")
-      // console.log('lastreceived drawing', this.lastReceivedDrawingURL);
-      // console.log('new url', drawingURL)
       if (drawingURL !== this.lastReceivedDrawingURL) {
-        // console.log("urls are different")
-      // matchResult.innerText = `Match percentage: ${data.percent}%`;
         redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
       }
     });
