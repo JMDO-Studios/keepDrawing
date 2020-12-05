@@ -163,24 +163,6 @@ export default class Game extends React.Component {
     // set up socket
     const socket = io();
 
-    // set up test image clicking functionality. can be removed when we don't need to use static images
-    const clickableImages = Array.from(document.getElementsByClassName('clickable'));
-    // const receivedImage = document.getElementById('received');
-    // const matchResult = document.getElementById('matchResult');
-    const targetImage = document.getElementById('targetImage');
-    clueMesh.material.opacityTexture.updateURL(getBase64Image(targetImage));
-
-    // send to image data to server on click
-    clickableImages.forEach((image) => {
-      image.addEventListener('click', (event) => {
-        socket.emit('imageClicked', {
-          data: getBase64Image(event.target),
-        });
-      });
-    });
-
-    /// remove the above when we don't need to test with static images anymore
-
     // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
     scene.onBeforeRenderObservable.add(() => {
       const handImage = document.getElementById('canvas');
@@ -197,6 +179,11 @@ export default class Game extends React.Component {
     socket.on('imageClicked', (data) => {
       // matchResult.innerText = `Match percentage: ${data.percent}%`;
       drawingMesh.material.opacityTexture.updateURL(data.data);
+    });
+
+    // change texter of clue when receiving image data
+    socket.on('newClue', (data) => {
+      clueMesh.material.opacityTexture.updateURL(data.data);
     });
 
     // start clock
