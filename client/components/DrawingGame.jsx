@@ -25,6 +25,7 @@ export default class DrawingGame extends Component {
       isVideo: false,
       draw: false,
       erase: false,
+      message: '',
     };
     this.startVideo = this.startVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
@@ -33,6 +34,9 @@ export default class DrawingGame extends Component {
   }
 
   handleButton(drawStatus, eraseStatus) {
+    if (drawStatus) this.setState({ message: 'Drawing Activated' });
+    if (eraseStatus) this.setState({ message: 'Eraser Activated' });
+    if (!drawStatus && !eraseStatus) this.setState({ message: 'Drawing Paused' });
     this.setState({ draw: drawStatus, erase: eraseStatus });
   }
 
@@ -62,10 +66,10 @@ export default class DrawingGame extends Component {
     handTrack.startVideo(video)
       .then((status) => {
         if (status) {
-          this.setState({ isVideo: true });
+          this.setState({ isVideo: true, message: 'Click START DRAWING to begin!' });
           this.runDetection();
         } else {
-          console.log('please enable video');
+          this.setState({ message: 'Please enable your video' });
         }
       });
   }
@@ -81,10 +85,11 @@ export default class DrawingGame extends Component {
 
   render() {
     const { handleButton, startGame } = this;
-    const { isVideo } = this.state;
+    const { isVideo, message } = this.state;
     if (!isVideo) startGame();
     return (
       <div>
+        <div>{message}</div>
         <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
