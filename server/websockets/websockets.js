@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const {
   express,
   app,
@@ -8,60 +9,6 @@ const {
 } = require('../serverbuild');
 // const { getDiffTestSocket } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
-
-function createTeamRoomName(gameRoomName, idOfFirstTeamMate) {
-  return gameRoomName + idOfFirstTeamMate;
-}
-
-function assignUsertoTeam(socket, gameRoomName, rosterIdx) {
-  // teamName is initialized in AssignUserstoGame
-  teamName = rosterIdx % bombGameSettings.teamSize === 0
-    ? createTeamRoomName(gameRoomName, socket.id)
-    : teamName;
-
-  console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameRoomName}`);
-
-  try {
-    socket.join(teamName);
-    socket.teamRoom = teamName;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-function assignUserstoGame(lobbyRoster, gameRoomName) {
-  const rosterIterator = lobbyRoster.values();
-
-  // teamName is declared outside the for loop
-  // so it can persist across iterations in the assignUser function
-  const teamName = null;
-
-  for (let rosterIdx = 0; rosterIdx < bombGameSettings.gameSize; rosterIdx += 1) {
-    const socketId = rosterIterator.next();
-    const { value } = socketId;
-    const socket = io.of('/').sockets.get(value);
-
-    // first x users join game room, that room gets added as a property to the socket
-    socket.join(gameRoomName);
-    socket.gameRoom = gameRoomName;
-
-    // every two users join their own team room, that room also gets added as property to the socket
-
-    assignUsertoTeam(socket, gameRoomName, rosterIdx);
-    // all x users leave lobby
-    socket.leave('lobby');
-  }
-}
-
-function createGameRoomName(name = '', offset = 0) {
-  // creates a game room name, if that name already exists, adds a digit and check again.
-  // there is probably a smoother way of doing this
-  let gameRoomName = name === '' ? `GAME${Math.floor(Math.random() * 100) + offset}` : name + offset;
-  if (io.sockets.adapter.rooms.has(gameRoomName)) {
-    gameRoomName = createGameRoomName(gameRoomName, offset + 1);
-  }
-  return gameRoomName;
-}
 
 function getIdsOfSocketsInRoom(roomName) {
   return io.sockets.adapter.rooms.get(roomName);
@@ -84,15 +31,76 @@ function generateRandomURL(urlArray) {
 
 const clueDirectoryPath = path.join(__dirname, '../assets/clues');
 const clueURLs = generateURLArray(clueDirectoryPath);
+const activeGames = {};
+
+function createActiveGameObject(gameName, lobbyRoster) {
+  activeGames[gameName] = { time: bombGameSettings.startClockinSec };
+  const game = activeGames[gameName];
+
+  const rosterIterator = lobbyRoster.values();
+
+  // loop to create the teams
+  for (let teamNum = 0; teamNum < lobbyRoster.size / bombGameSettings.teamSize; teamNum += 1) {
+    const teamName = uuidv4();
+    game[teamName] = {
+      members: [],
+      drawer: null,
+      clueGiver: null,
+      currentClueURL: generateRandomURL(clueURLs),
+      submittedClues: [],
+      points: 0,
+    };
+
+    for (let member = 0; member < bombGameSettings.teamSize; member += 1) {
+      const socketId = rosterIterator.next();
+      const { value } = socketId;
+      const socket = io.of('/').sockets.get(value);
+      game[teamName].members.push(socket.id);
+      if (member === 0) {
+        game[teamName].drawer = socket.id;
+        socket.role = 'drawer';
+      } else {
+        game[teamName].clueGiver = socket.id;
+        socket.role = 'clueGiver';
+      }
+      socket.gameRoom = gameName;
+      socket.teamRoom = teamName;
+
+      try {
+        socket.join(gameName);
+        socket.join(teamName);
+        console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameName}`);
+        socket.leave('lobby');
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+}
+
+function deleteGame(gameName) {
+  // we should make any remaining sockets leave the game room and their team rooms before deleting the object
+  delete activeGames[gameName];
+}
 
 async function websocketLogic(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
-    const gameRoomName = createGameRoomName();
-    assignUserstoGame(lobbyRoster, gameRoomName);
-    io.to(gameRoomName).emit('startClock', { time: bombGameSettings.startClockinSec, clueURL: generateRandomURL(clueURLs) });
+    const gameRoomName = uuidv4();
+    createActiveGameObject(gameRoomName, lobbyRoster);
+
+    Object.keys(activeGames[gameRoomName]).forEach((teamName) => {
+      io.to(teamName).emit('initialize', {
+        teamName,
+        gameName: gameRoomName,
+        drawer: activeGames[gameRoomName][teamName].drawer,
+        clueGiver: activeGames[gameRoomName][teamName].clueGiver,
+      });
+    });
+
+    io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
 
   socket.on('disconnect', () => {
