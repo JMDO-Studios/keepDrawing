@@ -170,7 +170,7 @@ export default class Game extends React.Component {
 
     /// register socket events /////////////
 
-    socket.on('initialize', ({ teamName, gameName }) => {
+    socket.on('initialize', ({ teamName, gameName, drawer, clueGiver }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
 
