@@ -169,6 +169,14 @@ export default class Game extends React.Component {
     const countdown = createGUI();
 
     /// register socket events /////////////
+
+    socket.on('initialize', ({ teamName, gameName, drawer, clueGiver }) => {
+      socket.teamName = teamName;
+      socket.gameName = gameName;
+
+      // change your player role and chose with objects to render accordingly
+    });
+
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
       if (drawingURL !== this.lastReceivedDrawingURL) {
@@ -184,8 +192,14 @@ export default class Game extends React.Component {
     });
 
     // start clock
-    socket.on('startClock', ({ time, clueURL }) => {
-      redrawTexture(clueMesh, clueURL, this.currentClueURL);
+    socket.on('startClock', (gameState) => {
+      console.log(socket.teamName);
+
+      const { time } = gameState;
+      const teamInfo = gameState[socket.teamName];
+      const { currentClueURL } = teamInfo;
+
+      redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
