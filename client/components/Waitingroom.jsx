@@ -1,8 +1,4 @@
 import React, { Component } from 'react';
-import { render } from 'react-dom';
-//import io from 'socket.io-client';
-//const socket = io();
-
 
 class Waitingroom extends Component {
   constructor(props) {
@@ -15,25 +11,9 @@ class Waitingroom extends Component {
     this.sendMessage = this.sendMessage.bind(this);
   }
 
-  editMessage(e) {
-    e.preventDefault();
-    this.setState({ message: e.target.value });
-  }
-
-  sendMessage(e) {
-    e.preventDefault();
-    let { message } = this.state;
-    if (message) {
-      this.props.socket.emit('chat message', message);
-    }
-    this.setState({ message: '' });
-    //this.post()
-  }
-
-
   componentDidMount() {
-    console.log('cDm ', this.props)
-    this.props.socket.on('chat message', (msg) => {
+    const { socket } = this.props;
+    socket.on('chat message', (msg) => {
       this.setState({
         message: msg,
         messages: [...this.state.messages, msg],
@@ -41,17 +21,29 @@ class Waitingroom extends Component {
     });
   }
 
+  editMessage(e) {
+    e.preventDefault();
+    this.setState({ message: e.target.value });
+  }
+
+  sendMessage(e) {
+    e.preventDefault();
+    const { message } = this.state;
+    const { socket } = this.props;
+    if (message) {
+      socket.emit('chat message', message);
+    }
+    this.setState({ message: '' });
+  }
+
   render() {
-    console.log(this.state);
     const { message, messages } = this.state;
-    let { editMessage, sendMessage } = this;
+    const { editMessage, sendMessage } = this;
 
     return (
       <div id="wait">
         <ul id="messages">
-          {messages.map((m, i) => {
-            return <li key={i}>{m}</li>;
-          })}
+          {messages.map((m, i) => <li key={i}>{m}</li>)}
         </ul>
         <form id="form">
           <input
@@ -66,11 +58,10 @@ class Waitingroom extends Component {
             }}
           />
         </form>
-        <label>Press Enter</label>
+        <div>Press Enter</div>
       </div>
     );
   }
 }
 
 export default Waitingroom;
-
