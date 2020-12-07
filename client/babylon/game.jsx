@@ -170,9 +170,13 @@ export default class Game extends React.Component {
 
     /// register socket events /////////////
 
-    socket.on('initialize', ({ teamName, gameName, drawer, clueGiver }) => {
+    socket.on('initialize', ({
+      teamName, gameName, members, drawer, clueGiver,
+    }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
+      const [teamMate] = members.filter((member) => member.id !== socket.id);
+      socket.teamMate = teamMate;
 
       // change your player role and chose with objects to render accordingly
     });

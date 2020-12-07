@@ -55,12 +55,12 @@ function createActiveGameObject(gameName, lobbyRoster) {
       const socketId = rosterIterator.next();
       const { value } = socketId;
       const socket = io.of('/').sockets.get(value);
-      game[teamName].members.push(socket.id);
+      game[teamName].members.push({ id: socket.id, name: socket.name });
       if (member === 0) {
-        game[teamName].drawer = socket.id;
+        game[teamName].drawer = { id: socket.id, name: socket.name };
         socket.role = 'drawer';
       } else {
-        game[teamName].clueGiver = socket.id;
+        game[teamName].clueGiver = { id: socket.id, name: socket.name };
         socket.role = 'clueGiver';
       }
       socket.gameRoom = gameName;
@@ -95,6 +95,7 @@ async function websocketLogic(socket) {
       io.to(teamName).emit('initialize', {
         teamName,
         gameName: gameRoomName,
+        members: activeGames[gameRoomName][teamName].members,
         drawer: activeGames[gameRoomName][teamName].drawer,
         clueGiver: activeGames[gameRoomName][teamName].clueGiver,
       });
@@ -107,8 +108,11 @@ async function websocketLogic(socket) {
     console.log('a user disconnected');
     socket.leave('lobby');
   });
+  socket.on('change name', ({ name }) => {
+    socket.name = name;
+  });
   socket.on('chat message', (message) => {
-    io.emit('chat message', message);
+    io.to('lobby').emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
     // commented out resemblejs test to speed up communication.

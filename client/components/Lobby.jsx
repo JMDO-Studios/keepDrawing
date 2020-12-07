@@ -29,9 +29,12 @@ class Lobby extends Component {
                 name="username"
                 className="lobby-input"
                 value={name}
-                onChange={(ev) => this.setState({
-                  player: { name: ev.target.value, id: socket.id },
-                })}
+                onChange={(ev) => {
+                  this.setState({
+                    player: { name: ev.target.value, id: socket.id },
+                  });
+                  socket.emit('change name', { name: ev.target.value });
+                }}
               />
             </label>
             <button type="submit" className="lobby-button"> submit </button>
