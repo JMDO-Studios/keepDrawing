@@ -1,3 +1,88 @@
 #myVideo {
   display: none;
 }
+
+ul {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+li {
+  list-style: none;
+}
+#messages{
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+#wait{
+  padding-top: 20vh;
+  height: 60vh;
+  width: auto;
+  text-align: center;
+}
+
+.wait-input{
+  margin-top: 6vh;
+  margin-bottom: 2vh;
+}
+
+.footer-text {
+  text-align: center;
+  height: 20vh;
+}
+
+.nav-bar {
+  height: 10vh;
+}
+
+.lobby-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  text-align: center;
+  height: 20vh;
+  width: 20vh;
+}
+
+.lobby-div {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  height: 60vh;
+}
+
+.lobby-input, .lobby-button {
+  
+  display: flex;
+  justify-content: space-around;
+  padding-left: 0;
+  padding-right: 0;
+  width: 15em;
+}
+
+.lobby-button {
+  background-color:goldenrod;
+  text-align: center;
+}
+
+h1 {
+  padding-top: 5vh;
+  text-align: center;
+  color: dodgerblue;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif
+}
+
+a{
+  text-decoration: none;
+  color: black;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+.nav-lobby {
+  color: dodgerblue;
+}

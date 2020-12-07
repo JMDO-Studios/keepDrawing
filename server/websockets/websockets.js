@@ -108,7 +108,7 @@ async function websocketLogic(socket) {
     socket.leave('lobby');
   });
   socket.on('chat message', (message) => {
-    io.emit('chat message', `RECEIVED:${message}`);
+    io.emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
     // commented out resemblejs test to speed up communication.
