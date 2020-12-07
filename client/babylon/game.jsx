@@ -3,7 +3,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, TextBlock, Rectangle,
+  AdvancedDynamicTexture, TextBlock, Rectangle, StackPanel, Control,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -13,21 +13,49 @@ import {
 import io from 'socket.io-client';
 
 function createGUI() {
+  const stackPanel = new StackPanel();
+  stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  const x = new TextBlock('TextBlock', 'Get Ready!');
+  advancedTexture.addControl(stackPanel);
+
+  // create timer
+  const teamMateBox = createTextBox('Your teammate is:', stackPanel);
+  const timeBox = createTextBox('Time Left:', stackPanel);
+  const countBox = createTextBox('Images submitted', stackPanel);
+  const selfPointBox = createTextBox('Your Points:', stackPanel);
+
+  const timer = addText('Get Ready!', timeBox);
+  const clueCount = addText('0', countBox);
+  const selfPoint = addText('0', selfPointBox);
+  const teamMateName = addText('', teamMateBox);
+
+  return {
+    timer, clueCount, selfPoint, teamMateName,
+  };
+}
+
+function addText(initialText, textBox) {
+  const text = new TextBlock('TextBlock', initialText);
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  textBox.addControl(text);
+  return text;
+}
+
+function createTextBox(initialText, parent) {
+  const text = new TextBlock('TextBlock', initialText);
   const rect1 = new Rectangle();
-  rect1.width = 0.05;
-  rect1.horizontalAlignment = 0;
-  rect1.verticalAlignment = 0;
+  rect1.width = 0.15;
   rect1.height = '40px';
   rect1.cornerRadius = 10;
   rect1.color = 'black';
   rect1.thickness = 4;
   rect1.background = 'grey';
-  advancedTexture.addControl(rect1);
-  rect1.addControl(x);
+  text.textHorizontalAlignment=Control.HORIZONTAL_ALIGNMENT_LEFT;
+  parent.addControl(rect1);
+  rect1.addControl(text);
 
-  return x;
+  return rect1;
 }
 
 function initializeScene(canvas) {
@@ -166,11 +194,13 @@ export default class Game extends React.Component {
     });
 
     // create GUI
-    const countdown = createGUI();
+    const { timer } = createGUI();
 
     /// register socket events /////////////
 
-    socket.on('initialize', ({ teamName, gameName, drawer, clueGiver }) => {
+    socket.on('initialize', ({
+      teamName, gameName, drawer, clueGiver,
+    }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
 
@@ -208,8 +238,8 @@ export default class Game extends React.Component {
         // countdown timer
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
-          countdown.text = String(Math.round(count));
-        } else countdown.text = 'BOOM!';
+          timer.text = String(Math.round(count));
+        } else timer.text = 'BOOM!';
       });
     });
 

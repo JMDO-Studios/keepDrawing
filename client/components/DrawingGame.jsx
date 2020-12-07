@@ -85,7 +85,7 @@ export default class DrawingGame extends Component {
   render() {
     const { handleButton, startGame } = this;
     const { isVideo, message } = this.state;
-    if (!isVideo) startGame();
+    // if (!isVideo) startGame();
     return (
       <div>
         <div>{message}</div>
