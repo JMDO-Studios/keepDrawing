@@ -55,12 +55,12 @@ function createActiveGameObject(gameName, lobbyRoster) {
       const socketId = rosterIterator.next();
       const { value } = socketId;
       const socket = io.of('/').sockets.get(value);
-      game[teamName].members.push(socket.id);
+      game[teamName].members.push({ id: socket.id, name: socket.name });
       if (member === 0) {
-        game[teamName].drawer = socket.id;
+        game[teamName].drawer = { id: socket.id, name: socket.name };
         socket.role = 'drawer';
       } else {
-        game[teamName].clueGiver = socket.id;
+        game[teamName].clueGiver = { id: socket.id, name: socket.name };
         socket.role = 'clueGiver';
       }
       socket.gameRoom = gameName;
@@ -69,6 +69,7 @@ function createActiveGameObject(gameName, lobbyRoster) {
       try {
         socket.join(gameName);
         socket.join(teamName);
+        io.to(socket.id).emit('goToGame');
         console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameName}`);
         socket.leave('lobby');
       } catch (error) {
@@ -83,18 +84,21 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-async function websocketLogic(socket) {
+
+function joinLobby(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = uuidv4();
     createActiveGameObject(gameRoomName, lobbyRoster);
+    socket.leave('lobby');
 
     Object.keys(activeGames[gameRoomName]).forEach((teamName) => {
       io.to(teamName).emit('initialize', {
         teamName,
         gameName: gameRoomName,
+        members: activeGames[gameRoomName][teamName].members,
         drawer: activeGames[gameRoomName][teamName].drawer,
         clueGiver: activeGames[gameRoomName][teamName].clueGiver,
       });
@@ -102,13 +106,18 @@ async function websocketLogic(socket) {
 
     io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
-
+}
+async function websocketLogic(socket) {
   socket.on('disconnect', () => {
     console.log('a user disconnected');
     socket.leave('lobby');
   });
+  socket.on('change name', ({ name }) => {
+    socket.name = name;
+    joinLobby(socket);
+  });
   socket.on('chat message', (message) => {
-    io.emit('chat message', message);
+    io.to('lobby').emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
     // commented out resemblejs test to speed up communication.
