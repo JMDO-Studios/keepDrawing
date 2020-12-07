@@ -83,7 +83,7 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-async function websocketLogic(socket) {
+function joinLobby(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
 
@@ -103,13 +103,15 @@ async function websocketLogic(socket) {
 
     io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
-
+}
+async function websocketLogic(socket) {
   socket.on('disconnect', () => {
     console.log('a user disconnected');
     socket.leave('lobby');
   });
   socket.on('change name', ({ name }) => {
     socket.name = name;
+    joinLobby(socket);
   });
   socket.on('chat message', (message) => {
     io.to('lobby').emit('chat message', message);

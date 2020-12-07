@@ -5,20 +5,21 @@ class Lobby extends Component {
     super(props);
     this.state = {
       player: {},
-      players: [],
     };
     this.save = this.save.bind(this);
   }
 
   save(ev) {
+    const { socket } = this.props;
     ev.preventDefault();
-    const { player, players } = this.state;
-    this.setState({ players: [...players, player] });
+    const { player } = this.state;
+    socket.name = player.name;
+    this.props.history.push('/waitingroom');
   }
 
   render() {
     const { name } = this.state;
-    const { socket } = this.props;
+
     return (
       <div>
         <h1>Lobby Room</h1>
@@ -29,12 +30,9 @@ class Lobby extends Component {
                 name="username"
                 className="lobby-input"
                 value={name}
-                onChange={(ev) => {
-                  this.setState({
-                    player: { name: ev.target.value, id: socket.id },
-                  });
-                  socket.emit('change name', { name: ev.target.value });
-                }}
+                onChange={(ev) => this.setState({
+                  player: { name: ev.target.value },
+                })}
               />
             </label>
             <button type="submit" className="lobby-button"> submit </button>

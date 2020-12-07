@@ -10,8 +10,6 @@ import {
   StandardMaterial, FreeCamera, DynamicTexture, Texture,
 } from '@babylonjs/core';
 
-import io from 'socket.io-client';
-
 function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   const x = new TextBlock('TextBlock', 'Get Ready!');
@@ -93,7 +91,14 @@ function redrawTexture(mesh, newURL, currentURL) {
 }
 
 export default class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { socket: props.socket };
+  }
+
   componentDidMount() {
+    const { socket } = this.state;
+
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
@@ -149,9 +154,6 @@ export default class Game extends React.Component {
         }
       }
     });
-
-    // set up socket
-    const socket = io();
 
     // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
     scene.onBeforeRenderObservable.add(() => {
