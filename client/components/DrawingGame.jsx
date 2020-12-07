@@ -25,6 +25,7 @@ export default class DrawingGame extends Component {
       draw: false,
       erase: false,
       message: '',
+      socket: props.socket,
     };
     this.startVideo = this.startVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
@@ -93,7 +94,7 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
-        <ThreeDScene />
+        <ThreeDScene socket={this.state.socket} />
       </div>
     );
   }
