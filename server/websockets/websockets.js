@@ -69,6 +69,7 @@ function createActiveGameObject(gameName, lobbyRoster) {
       try {
         socket.join(gameName);
         socket.join(teamName);
+        io.to(socket.id).emit('goToGame');
         console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameName}`);
         socket.leave('lobby');
       } catch (error) {
@@ -83,6 +84,7 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
+
 function joinLobby(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
@@ -90,6 +92,7 @@ function joinLobby(socket) {
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = uuidv4();
     createActiveGameObject(gameRoomName, lobbyRoster);
+    socket.leave('lobby');
 
     Object.keys(activeGames[gameRoomName]).forEach((teamName) => {
       io.to(teamName).emit('initialize', {

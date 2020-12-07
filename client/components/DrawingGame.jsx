@@ -27,7 +27,6 @@ export default class DrawingGame extends Component {
       message: '',
       socket: props.socket,
     };
-    console.log("socket is", props.socket);
     this.startVideo = this.startVideo.bind(this);
     this.runDetection = this.runDetection.bind(this);
     this.startGame = this.startGame.bind(this);
