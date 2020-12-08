@@ -3,7 +3,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, TextBlock, Rectangle,
+  AdvancedDynamicTexture, TextBlock, Rectangle, Button,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -226,6 +226,19 @@ export default class Game extends React.Component {
           text1.fontFamily = 'Impact';
           text1.textWrapping = true;
           textADT.addControl(text1);
+
+          const advancedTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+
+          const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
+          button1.width = '225px';
+          button1.height = '75px';
+          button1.color = 'black';
+          button1.cornerRadius = 20;
+          button1.background = 'grey';
+          button1.onPointerUpObservable.add(() => {
+            console.log('button clicked');
+          });
+          advancedTexture.addControl(button1);
         }
       });
     });
