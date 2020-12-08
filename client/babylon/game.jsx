@@ -29,7 +29,7 @@ function createGUI() {
   const teamMateName = addText('', teamMateBox);
 
   return {
-    timer, clueCount, selfPoint, teamMateName,
+    stackPanel, timer, clueCount, selfPoint, teamMateName,
   };
 }
 
@@ -49,11 +49,17 @@ function createTextBox(initialText, parent) {
   rect1.color = 'black';
   rect1.thickness = 4;
   rect1.background = 'grey';
-  text.textHorizontalAlignment=Control.HORIZONTAL_ALIGNMENT_LEFT;
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
   parent.addControl(rect1);
   rect1.addControl(text);
 
   return rect1;
+}
+
+function createOpponentScoreDisplay(teamNames, parent) {
+  const opponentScoreBox = createTextBox(teamNames, parent);
+  const opponentScore = addText('0', opponentScoreBox);
+  return opponentScore;
 }
 
 function initializeScene(canvas) {
@@ -127,8 +133,6 @@ export default class Game extends React.Component {
   componentDidMount() {
     const { socket } = this.state;
 
-    console.log("socket is", socket);
-
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
@@ -198,19 +202,30 @@ export default class Game extends React.Component {
     });
 
     // create GUI
-    const { timer } = createGUI();
+    const {
+      stackPanel, timer, clueCount, selfPoint, teamMateName,
+    } = createGUI();
+
+    const opponents= {};
 
     /// register socket events /////////////
 
     socket.on('initialize', ({
-      teamName, gameName, members, drawer, clueGiver,
+      teamName, gameName, members, drawer, clueGiver, teams,
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
-      console.log("teamName is", teamName)
       const [teamMate] = members.filter((member) => member.id !== socket.id);
-      socket.teamMate = teamMate.name;
-      console.log("teammate is", socket.teamMate);
+      teamMateName.text = teamMate.name;
+
+      // for each team, add their names, score, and submitted clues to HUD
+      Object.keys(teams).forEach((team) => {
+        if (team !== teamName) {
+          opponents[team] = {score:0, names: `${opponents[team].members[0].name} & ${opponents[team].members[1].name}`}
+          opponents[team].scoreDisplay = createOpponentScoreDisplay(opponents[team].names, stackPanel);
+        }
+      });
+
       // change your player role and chose with objects to render accordingly
     });
 
@@ -230,10 +245,8 @@ export default class Game extends React.Component {
 
     // start clock
     socket.on('startClock', (gameState) => {
-      console.log(socket.teamName);
-
       const { time } = gameState;
-      const teamInfo = gameState[socket.teamName];
+      const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
       redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
