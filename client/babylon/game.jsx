@@ -10,16 +10,41 @@ import {
   StandardMaterial, FreeCamera, DynamicTexture, Texture,
 } from '@babylonjs/core';
 
+function createTextBox(initialText, parent) {
+  const text = new TextBlock('TextBlock', `${initialText}:`);
+  text.paddingLeft = '5px';
+  text.color = 'gold';
+  const rect1 = new Rectangle();
+  rect1.width = 1;
+  rect1.height = '40px';
+  rect1.thickness = 0;
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  parent.addControl(rect1);
+  rect1.addControl(text);
+
+  return rect1;
+}
+
+function addText(initialText, textBox) {
+  const text = new TextBlock('TextBlock', initialText);
+  text.color = 'gold';
+  text.paddingRight = '5px';
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  textBox.addControl(text);
+  return text;
+}
+
 function createGUI() {
   const stackPanel = new StackPanel();
+  stackPanel.width = 0.2;
   stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
   stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   advancedTexture.addControl(stackPanel);
 
   // create timer
-  const teamMateBox = createTextBox('Your teammate is:', stackPanel);
-  const timeBox = createTextBox('Time Left:', stackPanel);
+  const teamMateBox = createTextBox('Your teammate is', stackPanel);
+  const timeBox = createTextBox('Time Left', stackPanel);
   const countBox = createTextBox('Images submitted', stackPanel);
 
   const timer = addText('Get Ready!', timeBox);
@@ -31,29 +56,6 @@ function createGUI() {
   };
 }
 
-function addText(initialText, textBox) {
-  const text = new TextBlock('TextBlock', initialText);
-  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  textBox.addControl(text);
-  return text;
-}
-
-function createTextBox(initialText, parent) {
-  const text = new TextBlock('TextBlock', initialText);
-  const rect1 = new Rectangle();
-  rect1.width = 0.15;
-  rect1.height = '40px';
-  rect1.cornerRadius = 10;
-  rect1.color = 'black';
-  rect1.thickness = 4;
-  rect1.background = 'grey';
-  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-  parent.addControl(rect1);
-  rect1.addControl(text);
-
-  return rect1;
-}
-
 function createScoreDisplay(teamNames, parent) {
   const scoreBox = createTextBox(teamNames, parent);
   const score = addText('0', scoreBox);
@@ -63,6 +65,12 @@ function createScoreDisplay(teamNames, parent) {
 function initializeScores(labelText, scores, teamName, parent) {
   scores[teamName] = { score: 0, names: labelText };
   scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
+}
+
+function updateScore(teamName, newScore, scores) {
+  const teamScore = scores[teamName];
+  teamScore.score = newScore;
+  teamScore.scoreDisplay.text = `${newScore}`;
 }
 
 function initializeScene(canvas) {
@@ -145,14 +153,12 @@ export default class Game extends React.Component {
     const { engine, scene } = this;
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
-    const { light1 } = this;
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
-    const { ground } = this;
+
     // create camera object and initalize customize functionality
     this.camera = initalizeCamera(canvas, scene);
-    const { camera } = this;
 
     // create scene objects
     this.teammate = createTeammate(scene);
@@ -244,8 +250,8 @@ export default class Game extends React.Component {
     });
 
     // change a team's score and display
-    socket.on('updateScore', (data) => {
-
+    socket.on('updateScore', ({ teamName, score }) => {
+      updateScore(teamName, score, scores);
     });
 
     // change texture of clue when receiving image data
