@@ -16,7 +16,7 @@ function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   const x = new TextBlock('TextBlock', 'Get Ready!');
   const rect1 = new Rectangle();
-  rect1.width = 0.05;
+  rect1.width = 0.1;
   rect1.horizontalAlignment = 0;
   rect1.verticalAlignment = 0;
   rect1.height = '40px';
@@ -91,6 +91,10 @@ function redrawTexture(mesh, newURL, currentURL) {
   currentURL = newURL;
   mesh.material.opacityTexture.updateURL(newURL);
 }
+
+// function createResultsTexture(mesh) {
+//   mesh.material.opacityTexture.updateURL()
+// }
 
 export default class Game extends React.Component {
   componentDidMount() {
@@ -201,7 +205,7 @@ export default class Game extends React.Component {
 
       redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
 
-      let count = time;
+      let count = 10;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
 
@@ -209,7 +213,20 @@ export default class Game extends React.Component {
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
           countdown.text = String(Math.round(count));
-        } else countdown.text = 'BOOM!';
+        } else {
+          countdown.text = 'BOOM!';
+          const textADT = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
+          const text1 = new TextBlock('hi text');
+          text1.text = 'Game Results:';
+          text1.width = 1;
+          text1.height = 1;
+          text1.color = 'black';
+          text1.fontSize = 35;
+          // text1.fontWeight = "bold";
+          text1.fontFamily = 'Impact';
+          text1.textWrapping = true;
+          textADT.addControl(text1);
+        }
       });
     });
 
