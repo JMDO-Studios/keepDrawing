@@ -3,29 +3,74 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, TextBlock, Rectangle,
+  AdvancedDynamicTexture, TextBlock, Rectangle, StackPanel, Control,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
   StandardMaterial, FreeCamera, DynamicTexture, Texture,
 } from '@babylonjs/core';
 
-function createGUI() {
-  const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  const x = new TextBlock('TextBlock', 'Get Ready!');
+function createTextBox(initialText, parent) {
+  const text = new TextBlock('TextBlock', `${initialText}:`);
+  text.paddingLeft = '5px';
+  text.color = 'gold';
   const rect1 = new Rectangle();
-  rect1.width = 0.05;
-  rect1.horizontalAlignment = 0;
-  rect1.verticalAlignment = 0;
+  rect1.width = 1;
   rect1.height = '40px';
-  rect1.cornerRadius = 10;
-  rect1.color = 'black';
-  rect1.thickness = 4;
-  rect1.background = 'grey';
-  advancedTexture.addControl(rect1);
-  rect1.addControl(x);
+  rect1.thickness = 0;
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  parent.addControl(rect1);
+  rect1.addControl(text);
 
-  return x;
+  return rect1;
+}
+
+function addText(initialText, textBox) {
+  const text = new TextBlock('TextBlock', initialText);
+  text.color = 'gold';
+  text.paddingRight = '5px';
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  textBox.addControl(text);
+  return text;
+}
+
+function createGUI() {
+  const stackPanel = new StackPanel();
+  stackPanel.width = 0.2;
+  stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
+  advancedTexture.addControl(stackPanel);
+
+  // create timer
+  const teamMateBox = createTextBox('Your teammate is', stackPanel);
+  const timeBox = createTextBox('Time Left', stackPanel);
+  const countBox = createTextBox('Images submitted', stackPanel);
+
+  const timer = addText('Get Ready!', timeBox);
+  const clueCount = addText('0', countBox);
+  const teamMateName = addText('', teamMateBox);
+
+  return {
+    stackPanel, timer, clueCount, teamMateName,
+  };
+}
+
+function createScoreDisplay(teamNames, parent) {
+  const scoreBox = createTextBox(teamNames, parent);
+  const score = addText('0', scoreBox);
+  return score;
+}
+
+function initializeScores(labelText, scores, teamName, parent) {
+  scores[teamName] = { score: 0, names: labelText };
+  scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
+}
+
+function updateScore(teamName, newScore, scores) {
+  const teamScore = scores[teamName];
+  teamScore.score = newScore;
+  teamScore.scoreDisplay.text = `${newScore}`;
 }
 
 function initializeScene(canvas) {
@@ -99,8 +144,6 @@ export default class Game extends React.Component {
   componentDidMount() {
     const { socket } = this.state;
 
-    console.log("socket is", socket);
-
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
@@ -110,14 +153,12 @@ export default class Game extends React.Component {
     const { engine, scene } = this;
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
-    const { light1 } = this;
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
-    const { ground } = this;
+
     // create camera object and initalize customize functionality
     this.camera = initalizeCamera(canvas, scene);
-    const { camera } = this;
 
     // create scene objects
     this.teammate = createTeammate(scene);
@@ -170,19 +211,34 @@ export default class Game extends React.Component {
     });
 
     // create GUI
-    const countdown = createGUI();
+    const {
+      stackPanel, timer, clueCount, teamMateName,
+    } = createGUI();
+
+    const scores = {};
 
     /// register socket events /////////////
 
     socket.on('initialize', ({
-      teamName, gameName, members, drawer, clueGiver,
+      teamName, gameName, members, drawer, clueGiver, teams,
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
-      console.log("teamName is", teamName)
       const [teamMate] = members.filter((member) => member.id !== socket.id);
-      socket.teamMate = teamMate.name;
-      console.log("teammate is", socket.teamMate);
+      teamMateName.text = teamMate.name;
+
+      // create your team first so that it always shows up first in list
+      initializeScores('Your Score', scores, teamName, stackPanel);
+
+      // for each team, add their names, score, and submitted clues to HUD
+      Object.keys(teams).forEach((team) => {
+        console.log(team);
+        if (team !== teamName) {
+          const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          initializeScores(label, scores, team, stackPanel);
+        }
+      });
+
       // change your player role and chose with objects to render accordingly
     });
 
@@ -191,6 +247,11 @@ export default class Game extends React.Component {
       if (drawingURL !== this.lastReceivedDrawingURL) {
         redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
       }
+    });
+
+    // change a team's score and display
+    socket.on('updateScore', ({ teamName, score }) => {
+      updateScore(teamName, score, scores);
     });
 
     // change texture of clue when receiving image data
@@ -202,10 +263,8 @@ export default class Game extends React.Component {
 
     // start clock
     socket.on('startClock', (gameState) => {
-      console.log(socket.teamName);
-
       const { time } = gameState;
-      const teamInfo = gameState[socket.teamName];
+      const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
       redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
@@ -217,8 +276,8 @@ export default class Game extends React.Component {
         // countdown timer
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
-          countdown.text = String(Math.round(count));
-        } else countdown.text = 'BOOM!';
+          timer.text = String(Math.round(count));
+        } else timer.text = 'BOOM!';
       });
     });
 
