@@ -97,6 +97,11 @@ function redrawTexture(mesh, newURL, currentURL) {
 // }
 
 export default class Game extends React.Component {
+  // eslint-disable-next-line no-useless-constructor
+  constructor(props) {
+    super(props);
+  }
+
   componentDidMount() {
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
@@ -237,12 +242,13 @@ export default class Game extends React.Component {
           button1.background = 'grey';
           button1.onPointerUpObservable.add(() => {
             console.log('button clicked');
-            // socket stuff?
-            socket.emit('leavingGame', {
-              // imageData: imageURL,
-            });
+            socket.emit('leavingGame');
             // change state to render the correct page
             // this.setState({});
+            //  or push to history to change page
+            // this.props.history.push('/waitingroom');
+            // delete game? socket.emit and then socket.on
+            // for delete game make sure to delete game for all parties?
           });
           buttonTexture.addControl(button1);
         }
