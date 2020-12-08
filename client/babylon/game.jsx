@@ -215,7 +215,7 @@ export default class Game extends React.Component {
           countdown.text = String(Math.round(count));
         } else {
           countdown.text = 'BOOM!';
-          const textADT = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
+          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
           const text1 = new TextBlock('hi text');
           text1.text = 'Game Results:';
           text1.width = 1;
@@ -225,9 +225,9 @@ export default class Game extends React.Component {
           // text1.fontWeight = "bold";
           text1.fontFamily = 'Impact';
           text1.textWrapping = true;
-          textADT.addControl(text1);
+          gameResultsTexture.addControl(text1);
 
-          const advancedTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
 
           const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
           button1.width = '225px';
@@ -237,8 +237,14 @@ export default class Game extends React.Component {
           button1.background = 'grey';
           button1.onPointerUpObservable.add(() => {
             console.log('button clicked');
+            // socket stuff?
+            socket.emit('leavingGame', {
+              // imageData: imageURL,
+            });
+            // change state to render the correct page
+            // this.setState({});
           });
-          advancedTexture.addControl(button1);
+          buttonTexture.addControl(button1);
         }
       });
     });

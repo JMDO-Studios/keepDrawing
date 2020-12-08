@@ -119,6 +119,10 @@ async function websocketLogic(socket) {
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+  socket.on('leavingGame', () => {
+    socket.leave(socket.gameRoom);
+    socket.leave(socket.teamRoom);
+  });
 }
 
 module.exports = {
