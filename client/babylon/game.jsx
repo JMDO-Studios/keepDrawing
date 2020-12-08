@@ -90,14 +90,14 @@ function createButton (type, sphere, scene) {
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(
-    sphere.position.x - 0.5,
-    sphere.position.y,
+    sphere.position.x + 0.45,
+    sphere.position.y + 0.2,
     sphere.position.z
   );
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
   const button1 = Button.CreateSimpleButton("but1", "Click Me", scene);
-    button1.width = 1;
-    button1.height = 0.4;
+    button1.width = 0.5;
+    button1.height = 0.1;
     button1.color = "white";
     button1.fontSize = 50;
     button1.background = "green";
