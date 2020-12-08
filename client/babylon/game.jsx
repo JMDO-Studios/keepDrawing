@@ -21,15 +21,13 @@ function createGUI() {
   const teamMateBox = createTextBox('Your teammate is:', stackPanel);
   const timeBox = createTextBox('Time Left:', stackPanel);
   const countBox = createTextBox('Images submitted', stackPanel);
-  const selfPointBox = createTextBox('Your Points:', stackPanel);
 
   const timer = addText('Get Ready!', timeBox);
   const clueCount = addText('0', countBox);
-  const selfPoint = addText('0', selfPointBox);
   const teamMateName = addText('', teamMateBox);
 
   return {
-    stackPanel, timer, clueCount, selfPoint, teamMateName,
+    stackPanel, timer, clueCount, teamMateName,
   };
 }
 
@@ -56,10 +54,15 @@ function createTextBox(initialText, parent) {
   return rect1;
 }
 
-function createOpponentScoreDisplay(teamNames, parent) {
-  const opponentScoreBox = createTextBox(teamNames, parent);
-  const opponentScore = addText('0', opponentScoreBox);
-  return opponentScore;
+function createScoreDisplay(teamNames, parent) {
+  const scoreBox = createTextBox(teamNames, parent);
+  const score = addText('0', scoreBox);
+  return score;
+}
+
+function initializeScores(labelText, scores, teamName, parent) {
+  scores[teamName] = { score: 0, names: labelText };
+  scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
 }
 
 function initializeScene(canvas) {
@@ -203,10 +206,10 @@ export default class Game extends React.Component {
 
     // create GUI
     const {
-      stackPanel, timer, clueCount, selfPoint, teamMateName,
+      stackPanel, timer, clueCount, teamMateName,
     } = createGUI();
 
-    const opponents= {};
+    const scores = {};
 
     /// register socket events /////////////
 
@@ -218,11 +221,15 @@ export default class Game extends React.Component {
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       teamMateName.text = teamMate.name;
 
+      // create your team first so that it always shows up first in list
+      initializeScores('Your Score', scores, teamName, stackPanel);
+
       // for each team, add their names, score, and submitted clues to HUD
       Object.keys(teams).forEach((team) => {
+        console.log(team);
         if (team !== teamName) {
-          opponents[team] = {score:0, names: `${opponents[team].members[0].name} & ${opponents[team].members[1].name}`}
-          opponents[team].scoreDisplay = createOpponentScoreDisplay(opponents[team].names, stackPanel);
+          const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          initializeScores(label, scores, team, stackPanel);
         }
       });
 
@@ -234,6 +241,11 @@ export default class Game extends React.Component {
       if (drawingURL !== this.lastReceivedDrawingURL) {
         redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
       }
+    });
+
+    // change a team's score and display
+    socket.on('updateScore', (data) => {
+
     });
 
     // change texture of clue when receiving image data
