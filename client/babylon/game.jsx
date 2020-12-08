@@ -121,8 +121,6 @@ export default class Game extends React.Component {
   componentDidMount() {
     const { socket } = this.state;
 
-    console.log("socket is", socket);
-
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
@@ -203,10 +201,9 @@ export default class Game extends React.Component {
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
-      console.log("teamName is", teamName)
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       socket.teamMate = teamMate.name;
-      console.log("teammate is", socket.teamMate);
+      socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
       // change your player role and chose with objects to render accordingly
     });
 
@@ -226,8 +223,6 @@ export default class Game extends React.Component {
 
     // start clock
     socket.on('startClock', (gameState) => {
-      console.log(socket.teamName);
-
       const { time } = gameState;
       const teamInfo = gameState[socket.teamName];
       const { currentClueURL } = teamInfo;
