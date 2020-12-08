@@ -93,6 +93,7 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
+        <div>{socket.role}</div>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
         <ThreeDScene socket={this.state.socket} />
       </div>
