@@ -3,7 +3,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, TextBlock, Rectangle, StackPanel, Control,
+  AdvancedDynamicTexture, Button, TextBlock, Rectangle, StackPanel, Control,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -130,6 +130,28 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
+function createButton (type, sphere, scene) {
+  const mesh = MeshBuilder.CreatePlane(type, 
+    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    scene);
+  mesh.position = new Vector3(
+    sphere.position.x - 0.5,
+    sphere.position.y,
+    sphere.position.z
+  );
+  const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
+  const button1 = Button.CreateSimpleButton("but1", "Click Me", scene);
+    button1.width = 1;
+    button1.height = 0.4;
+    button1.color = "white";
+    button1.fontSize = 50;
+    button1.background = "green";
+    button1.onPointerUpObservable.add(function() {
+        alert("you did it!");
+    });
+    advancedTexture.addControl(button1)
+}
+
 function redrawTexture(mesh, newURL, currentURL) {
   currentURL = newURL;
   mesh.material.opacityTexture.updateURL(newURL);
@@ -166,6 +188,8 @@ export default class Game extends React.Component {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
+    this.submitButton = createButton('submit', teammate, scene);
+    const { submitButton } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -225,6 +249,8 @@ export default class Game extends React.Component {
       socket.teamName = teamName;
       socket.gameName = gameName;
       const [teamMate] = members.filter((member) => member.id !== socket.id);
+      socket.teamMate = teamMate.name;
+      socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
       teamMateName.text = teamMate.name;
 
       // create your team first so that it always shows up first in list
@@ -238,7 +264,6 @@ export default class Game extends React.Component {
           initializeScores(label, scores, team, stackPanel);
         }
       });
-
       // change your player role and chose with objects to render accordingly
     });
 
