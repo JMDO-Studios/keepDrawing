@@ -84,7 +84,6 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-
 function joinLobby(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
@@ -128,7 +127,14 @@ async function websocketLogic(socket) {
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+  socket.on('Emit test', () => console.log('Hello world'));
 }
+
+// socket.on('drawingSubmit', (clue, drawing) => {
+//   Promise.resolve(getDiffTestSocket(clue, drawing)).then((percent) => {
+//     socket.to(socket.teamRoom).emit('resultsReturned',
+//     { data: imageData.data, percent: 100 - percent.misMatchPercentage });
+// }))
 
 module.exports = {
   express, app, http, io, websocketLogic,

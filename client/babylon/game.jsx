@@ -9,7 +9,7 @@ import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
   StandardMaterial, FreeCamera, DynamicTexture, Texture,
 } from '@babylonjs/core';
-import createButton from './button'
+import createButton from './button';
 
 function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
@@ -126,7 +126,7 @@ export default class Game extends React.Component {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
-    this.submitButton = createButton('submit', drawingMesh, scene);
+    this.submitButton = createButton('submit', drawingMesh, scene, socket);
     const { submitButton } = this;
 
     // initialize plane texture URLs
