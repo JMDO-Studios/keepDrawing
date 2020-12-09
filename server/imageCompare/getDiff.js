@@ -32,4 +32,4 @@ async function getDiffFinal(drawing, clue) {
     return error;
   }
 }
-module.exports = { getDiff, getDiffTestSocket, getDiffFinal };
+module.exports = { getDiffFinal };

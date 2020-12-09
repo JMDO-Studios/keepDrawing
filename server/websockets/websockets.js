@@ -1,14 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { compareImages } = require('resemblejs/compareImages');
 const {
   express,
   app,
   http,
   io,
 } = require('../serverbuild');
-// const { getDiffFinal } = require('../imageCompare/getDiff');
+const { getDiffFinal } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
@@ -136,10 +135,10 @@ async function websocketLogic(socket) {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
   socket.on('submitComparison', (payload) => {
-  //   Promise.resolve(getDiffFinal(payload.drawing, payload.clue)).then((percent) => {
-  //     socket.to(socket.teamRoom).emit('comparisonResults',
-  //       { percent: 100 - percent.misMatchPercentage });
-  //   });
+    Promise.resolve(getDiffFinal(payload.drawing, payload.clue)).then((percent) => {
+      socket.to(socket.teamRoom).emit('comparisonResults',
+        { percent: 100 - percent.misMatchPercentage });
+    });
   });
 }
 // socket.on('drawingSubmit', (clue, drawing) => {
