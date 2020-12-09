@@ -321,11 +321,11 @@ export default class Game extends React.Component {
   }
 
   compareImages() {
-    const { socket } = this.state,
+    const { socket, lastReceivedDrawingURL, clientClueURL } = this.state;
     socket.emit('submitComparison', {
       drawing: lastReceivedDrawingURL,
       clue: clientClueURL,
-    })
+    });
   }
 
   render() {
