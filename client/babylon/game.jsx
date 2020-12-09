@@ -117,8 +117,10 @@ function createTeammate(scene) {
 }
 
 function createImagePlane(type, sphere, scene) {
+  const { width, height } = document.getElementById('drawingCanvas');
+  const heightToWidth = height / width;
   const mesh = MeshBuilder.CreatePlane(type,
-    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    { width: 0.5, height: 0.5 * heightToWidth, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + 0.5 : sphere.position.x - 0.5,
     sphere.position.y + 0.5,
