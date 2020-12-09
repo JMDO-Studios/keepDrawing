@@ -3,7 +3,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, TextBlock, Rectangle,
+  AdvancedDynamicTexture, Button, TextBlock, Rectangle, StackPanel, Control,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -11,22 +11,67 @@ import {
 } from '@babylonjs/core';
 import createButton from './button';
 
-function createGUI() {
-  const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  const x = new TextBlock('TextBlock', 'Get Ready!');
+function createTextBox(initialText, parent) {
+  const text = new TextBlock('TextBlock', `${initialText}:`);
+  text.paddingLeft = '5px';
+  text.color = 'gold';
   const rect1 = new Rectangle();
-  rect1.width = 0.05;
-  rect1.horizontalAlignment = 0;
-  rect1.verticalAlignment = 0;
+  rect1.width = 1;
   rect1.height = '40px';
-  rect1.cornerRadius = 10;
-  rect1.color = 'black';
-  rect1.thickness = 4;
-  rect1.background = 'grey';
-  advancedTexture.addControl(rect1);
-  rect1.addControl(x);
+  rect1.thickness = 0;
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  parent.addControl(rect1);
+  rect1.addControl(text);
 
-  return x;
+  return rect1;
+}
+
+function addText(initialText, textBox) {
+  const text = new TextBlock('TextBlock', initialText);
+  text.color = 'gold';
+  text.paddingRight = '5px';
+  text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  textBox.addControl(text);
+  return text;
+}
+
+function createGUI() {
+  const stackPanel = new StackPanel();
+  stackPanel.width = 0.2;
+  stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
+  advancedTexture.addControl(stackPanel);
+
+  // create timer
+  const teamMateBox = createTextBox('Your teammate is', stackPanel);
+  const timeBox = createTextBox('Time Left', stackPanel);
+  const countBox = createTextBox('Images submitted', stackPanel);
+
+  const timer = addText('Get Ready!', timeBox);
+  const clueCount = addText('0', countBox);
+  const teamMateName = addText('', teamMateBox);
+
+  return {
+    stackPanel, timer, clueCount, teamMateName,
+  };
+}
+
+function createScoreDisplay(teamNames, parent) {
+  const scoreBox = createTextBox(teamNames, parent);
+  const score = addText('0', scoreBox);
+  return score;
+}
+
+function initializeScores(labelText, scores, teamName, parent) {
+  scores[teamName] = { score: 0, names: labelText };
+  scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
+}
+
+function updateScore(teamName, newScore, scores) {
+  const teamScore = scores[teamName];
+  teamScore.score = newScore;
+  teamScore.scoreDisplay.text = `${newScore}`;
 }
 
 function initializeScene(canvas) {
@@ -86,8 +131,6 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-
-
 function redrawTexture(mesh, newURL, currentURL) {
   currentURL = newURL;
   mesh.material.opacityTexture.updateURL(newURL);
@@ -96,11 +139,19 @@ function redrawTexture(mesh, newURL, currentURL) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { socket: props.socket };
+    this.state = {
+      socket: props.socket,
+      clientClueURL: '',
+      lastSentDrawingURL: '',
+      lastReceivedDrawingURL: '',
+    };
+    this.compareImages = this.compareImages.bind(this);
   }
 
   componentDidMount() {
-    const { socket } = this.state;
+    const {
+      socket, clientClueURL, lastSentDrawingURL, lastReceivedDrawingURL,
+    } = this.state;
 
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
@@ -111,14 +162,12 @@ export default class Game extends React.Component {
     const { engine, scene } = this;
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
-    const { light1 } = this;
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
-    const { ground } = this;
+
     // create camera object and initalize customize functionality
     this.camera = initalizeCamera(canvas, scene);
-    const { camera } = this;
 
     // create scene objects
     this.teammate = createTeammate(scene);
@@ -126,13 +175,31 @@ export default class Game extends React.Component {
     this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { clueMesh, drawingMesh } = this;
-    this.submitButton = createButton('submit', drawingMesh, scene, socket);
-    const { submitButton } = this;
 
+    // create submit button
+    const mesh = MeshBuilder.CreatePlane('submit',
+      { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+      scene);
+    mesh.position = new Vector3(
+      drawingMesh.position.x,
+      drawingMesh.position.y - 0.3,
+      drawingMesh.position.z,
+    );
+    const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
+    const submitButton = Button.CreateSimpleButton('but1', 'Submit', scene);
+    submitButton.width = 0.5;
+    submitButton.height = 0.1;
+    submitButton.color = 'white';
+    submitButton.fontSize = 50;
+    submitButton.background = 'green';
+    submitButton.onPointerUpObservable.add(() => this.compareImages());
+    advancedTexture.addControl(submitButton);
+
+    socket.on('comparisonResults', (payload) => console.log(payload.percent));
     // initialize plane texture URLs
-    this.currentClueURL = '';
-    this.lastSentDrawingURL = '';
-    this.lastReceivedDrawingURL = '';
+    // this.currentClueURL = '';
+    // this.lastSentDrawingURL = '';
+    // this.lastReceivedDrawingURL = '';
 
     window.addEventListener('resize', () => {
       this.engine.resize();
@@ -164,8 +231,11 @@ export default class Game extends React.Component {
     scene.onBeforeRenderObservable.add(() => {
       const handImage = document.getElementById('drawingCanvas');
       const imageURL = handImage.toDataURL();
-      if (imageURL !== this.lastSentDrawingURL) {
-        this.lastSentDrawingURL = imageURL;
+      if (imageURL !== lastSentDrawingURL) {
+        this.setState({
+          lastSentDrawingURL: imageURL,
+        });
+        // this.lastSentDrawingURL = imageURL;
         socket.emit('drawingChanged', {
           imageData: imageURL,
         });
@@ -173,39 +243,62 @@ export default class Game extends React.Component {
     });
 
     // create GUI
-    const countdown = createGUI();
+    const {
+      stackPanel, timer, clueCount, teamMateName,
+    } = createGUI();
+
+    const scores = {};
 
     /// register socket events /////////////
 
     socket.on('initialize', ({
-      teamName, gameName, members, drawer, clueGiver,
+      teamName, gameName, members, drawer, clueGiver, teams,
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       socket.teamMate = teamMate.name;
       socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
+      teamMateName.text = teamMate.name;
+
+      // create your team first so that it always shows up first in list
+      initializeScores('Your Score', scores, teamName, stackPanel);
+
+      // for each team, add their names, score, and submitted clues to HUD
+      Object.keys(teams).forEach((team) => {
+        console.log(team);
+        if (team !== teamName) {
+          const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          initializeScores(label, scores, team, stackPanel);
+        }
+      });
+
       // change your player role and chose with objects to render accordingly
     });
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      if (drawingURL !== this.lastReceivedDrawingURL) {
-        redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
+      if (drawingURL !== lastReceivedDrawingURL) {
+        redrawTexture(drawingMesh, drawingURL, lastReceivedDrawingURL);
       }
+    });
+
+    // change a team's score and display
+    socket.on('updateScore', ({ teamName, score }) => {
+      updateScore(teamName, score, scores);
     });
 
     // change texture of clue when receiving image data
     socket.on('newClue', ({ clueURL }) => {
-      if (clueURL !== this.currentClueURL) {
-        redrawTexture(clueMesh, clueURL, this.currentClueURL);
+      if (clueURL !== clientClueURL) {
+        redrawTexture(clueMesh, clueURL, clientClueURL);
       }
     });
 
     // start clock
     socket.on('startClock', (gameState) => {
       const { time } = gameState;
-      const teamInfo = gameState[socket.teamName];
+      const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
       redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
@@ -217,14 +310,22 @@ export default class Game extends React.Component {
         // countdown timer
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
-          countdown.text = String(Math.round(count));
-        } else countdown.text = 'BOOM!';
+          timer.text = String(Math.round(count));
+        } else timer.text = 'BOOM!';
       });
     });
 
     engine.runRenderLoop(() => {
       scene.render();
     });
+  }
+
+  compareImages() {
+    const { socket } = this.state,
+    socket.emit('submitComparison', {
+      drawing: lastReceivedDrawingURL,
+      clue: clientClueURL,
+    })
   }
 
   render() {
