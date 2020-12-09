@@ -118,12 +118,13 @@ function createTeammate(scene) {
 
 function createImagePlane(type, sphere, scene) {
   const { width, height } = document.getElementById('drawingCanvas');
-  const heightToWidth = height / width;
+  const meshWidth = 1;
+  const scaledHeight = meshWidth * (height / width)
   const mesh = MeshBuilder.CreatePlane(type,
-    { width: 0.5, height: 0.5 * heightToWidth, sideOrientation: Mesh.DOUBLESIDE },
+    { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + 0.5 : sphere.position.x - 0.5,
-    sphere.position.y + 0.5,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth : sphere.position.x - meshWidth,
+    sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
   if (type === 'clue' || type === 'drawing') {
@@ -255,7 +256,6 @@ export default class Game extends React.Component {
       // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene);
-        this.clueMesh.scaling(0, -1, 0);
         scene.onBeforeRenderObservable.add(() => {
           const drawingImage = document.getElementById('drawingCanvas');
           const drawingImageURL = drawingImage.toDataURL();
