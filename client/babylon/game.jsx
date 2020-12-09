@@ -7,7 +7,7 @@ import {
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
-  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture,
+  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3,
 } from '@babylonjs/core';
 
 function createTextBox(initialText, parent) {
@@ -78,6 +78,7 @@ function initializeScene(canvas) {
   const scene = new Scene(engine);
   scene.gravity = new Vector3(0, -9.81, 0);
   scene.collisionsEnabled = true;
+  scene.ambientColor = new Color3(1, 1, 1);
 
   return [engine, scene];
 }
@@ -127,47 +128,43 @@ function createImagePlane(type, sphere, scene) {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
   } else {
-    material.diffuseTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
-    // const handCanvas = document.getElementById('handCanvas');
-    // const videoStream = handCanvas.captureStream(10);
-    // material.diffuseTexture = new VideoTexture('DynamicTexture', videoStream, scene, false);
-    // const video = document.getElementById('myVideo');
-    // // material.diffuseTexture = new VideoTexture('video', video, scene, false);
-    // material.diffuseTexture = new VideoTexture.CreateFromWebCam(scene, function(videoTexture) {
-    // }, { maxWidth: 256, maxHeight: 256 });
+    const video = document.getElementById('myVideo');
+    material.emissiveTexture = new VideoTexture('video', video, scene, false, false);
+
+    // theoretically we can mix and match textures, levels, and colors until we find the brightness we like.
+    // this is going to take trial and error
+    material.emissiveTexture.level = 0.5;
+    material.diffuseColor = new Color3(1, 1, 1);
+    material.specularColor = new Color3(0, 0, 0);
   }
   mesh.material = material;
   return mesh;
 }
 
 function createButton(type, sphere, scene) {
-  const mesh = MeshBuilder.CreatePlane(type, 
+  const mesh = MeshBuilder.CreatePlane(type,
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(
     sphere.position.x - 0.5,
     sphere.position.y,
-    sphere.position.z
+    sphere.position.z,
   );
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-  const button1 = Button.CreateSimpleButton("but1", "Click Me", scene);
-    button1.width = 1;
-    button1.height = 0.4;
-    button1.color = "white";
-    button1.fontSize = 50;
-    button1.background = "green";
-    button1.onPointerUpObservable.add(function() {
-        alert("you did it!");
-    });
-    advancedTexture.addControl(button1);
+  const button1 = Button.CreateSimpleButton('but1', 'Click Me', scene);
+  button1.width = 1;
+  button1.height = 0.4;
+  button1.color = 'white';
+  button1.fontSize = 50;
+  button1.background = 'green';
+  button1.onPointerUpObservable.add(() => {
+    alert('you did it!');
+  });
+  advancedTexture.addControl(button1);
 }
 
 function redrawTexture(mesh, newURL) {
   mesh.material.opacityTexture.updateURL(newURL);
-}
-
-function redrawHandTexture(mesh, newURL) {
-  mesh.material.diffuseTexture.updateURL(newURL);
 }
 
 export default class Game extends React.Component {
@@ -251,21 +248,16 @@ export default class Game extends React.Component {
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       socket.teamMate = teamMate.name;
       socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
-      console.log(socket.role);
       teamMateName.text = teamMate.name;
 
       // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene);
-        console.log(this.clueMesh);
+        this.clueMesh.scaling(0, -1, 0);
         scene.onBeforeRenderObservable.add(() => {
           const drawingImage = document.getElementById('drawingCanvas');
           const drawingImageURL = drawingImage.toDataURL();
-          const handImage = document.getElementById('handCanvas');
-          const handImageURL = handImage.toDataURL();
-          redrawHandTexture(this.clueMesh, handImageURL);
           if (drawingImageURL !== this.lastSentDrawingURL) {
-            console.log('im the drawer');
             redrawTexture(drawingMesh, drawingImageURL);
             this.lastSentDrawingURL = drawingImageURL;
             socket.emit('drawingChanged', {
@@ -281,13 +273,11 @@ export default class Game extends React.Component {
 
       // for each team, add their names, score, and submitted clues to HUD
       Object.keys(teams).forEach((team) => {
-        console.log(team);
         if (team !== teamName) {
           const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
           initializeScores(label, scores, team, stackPanel);
         }
       });
-      // change your player role and chose with objects to render accordingly
     });
 
     // change texture of plane when receiving image data
@@ -304,7 +294,7 @@ export default class Game extends React.Component {
 
     // change texture of clue when receiving image data
     socket.on('newClue', ({ clueURL }) => {
-      if (clueURL !== this.currentClueURL) {
+      if (socket.role === 'clueGiver' && clueURL !== this.currentClueURL) {
         redrawTexture(this.clueMesh, clueURL, this.currentClueURL);
       }
     });
@@ -315,7 +305,7 @@ export default class Game extends React.Component {
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
-      redrawTexture(this.clueMesh, currentClueURL, this.currentClueURL);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL, this.currentClueURL);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
