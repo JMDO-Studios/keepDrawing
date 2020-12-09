@@ -149,7 +149,7 @@ function createButton (type, sphere, scene) {
     button1.onPointerUpObservable.add(function() {
         alert("you did it!");
     });
-    advancedTexture.addControl(button1)
+    advancedTexture.addControl(button1);
 }
 
 function redrawTexture(mesh, newURL, currentURL) {
@@ -222,18 +222,6 @@ export default class Game extends React.Component {
       }
     });
 
-    // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
-    scene.onBeforeRenderObservable.add(() => {
-      const handImage = document.getElementById('drawingCanvas');
-      const imageURL = handImage.toDataURL();
-      if (imageURL !== this.lastSentDrawingURL) {
-        this.lastSentDrawingURL = imageURL;
-        socket.emit('drawingChanged', {
-          imageData: imageURL,
-        });
-      }
-    });
-
     // create GUI
     const {
       stackPanel, timer, clueCount, teamMateName,
@@ -251,7 +239,24 @@ export default class Game extends React.Component {
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       socket.teamMate = teamMate.name;
       socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
+      console.log(socket.role);
       teamMateName.text = teamMate.name;
+
+      // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
+      if (socket.role === 'drawer') {
+        scene.onBeforeRenderObservable.add(() => {
+          const handImage = document.getElementById('drawingCanvas');
+          const imageURL = handImage.toDataURL();
+          if (imageURL !== this.lastSentDrawingURL) {
+            console.log('im the drawer');
+            redrawTexture(drawingMesh, imageURL, this.lastSentDrawingURL);
+            this.lastSentDrawingURL = imageURL;
+            socket.emit('drawingChanged', {
+              imageData: imageURL,
+            });
+          }
+        });
+      }
 
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
