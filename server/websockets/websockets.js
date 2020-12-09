@@ -134,6 +134,13 @@ async function websocketLogic(socket) {
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+
+  socket.on('test submit', ({gameRoom, teamRoom}) => {
+    const clueURL = generateRandomURL(clueURLs);
+    activeGames[gameRoom].teams[teamRoom].points += 5;
+    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: activeGames[socket.gameRoom].teams[socket.teamRoom].points });
+    io.to(teamRoom).emit('new clue', { clueURL });
+  });
 }
 
 module.exports = {

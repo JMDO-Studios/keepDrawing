@@ -137,14 +137,14 @@ function createImagePlane(type, sphere, scene) {
     // theoretically we can mix and match textures, levels, and colors until we find the brightness we like.
     // this is going to take trial and error
     material.emissiveTexture.level = 0.5;
-    material.diffuseColor = new Color3(1, 1, 1);
-    material.specularColor = new Color3(0, 0, 0);
+    // material.diffuseColor = new Color3(1, 1, 1);
+    // material.specularColor = new Color3(0, 0, 0);
   }
   mesh.material = material;
   return mesh;
 }
 
-function createButton(type, sphere, scene) {
+function createButton(type, sphere, scene, socket) {
   const mesh = MeshBuilder.CreatePlane(type,
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
@@ -161,13 +161,27 @@ function createButton(type, sphere, scene) {
   button1.fontSize = 50;
   button1.background = 'green';
   button1.onPointerUpObservable.add(() => {
-    alert('you did it!');
+    socket.emit('test submit', { gameRoom: socket.gameName, teamRoom: socket.teamName });
   });
   advancedTexture.addControl(button1);
 }
 
 function redrawTexture(mesh, newURL) {
   mesh.material.opacityTexture.updateURL(newURL);
+}
+
+function addDrawingObservable(instance, scene, drawingMesh, socket) {
+  instance.drawingObservable = scene.onBeforeRenderObservable.add(() => {
+    const drawingImage = document.getElementById('drawingCanvas');
+    const drawingImageURL = drawingImage.toDataURL();
+    if (drawingImageURL !== instance.lastSentDrawingURL) {
+      redrawTexture(drawingMesh, drawingImageURL);
+      instance.lastSentDrawingURL = drawingImageURL;
+      socket.emit('drawingChanged', {
+        imageData: drawingImageURL,
+      });
+    }
+  });
 }
 
 export default class Game extends React.Component {
@@ -200,7 +214,7 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    this.submitButton = createButton('submit', teammate, scene);
+    this.submitButton = createButton('submit', teammate, scene, socket);
     const { submitButton } = this;
 
     // initialize plane texture URLs
@@ -256,17 +270,7 @@ export default class Game extends React.Component {
       // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene);
-        scene.onBeforeRenderObservable.add(() => {
-          const drawingImage = document.getElementById('drawingCanvas');
-          const drawingImageURL = drawingImage.toDataURL();
-          if (drawingImageURL !== this.lastSentDrawingURL) {
-            redrawTexture(drawingMesh, drawingImageURL);
-            this.lastSentDrawingURL = drawingImageURL;
-            socket.emit('drawingChanged', {
-              imageData: drawingImageURL,
-            });
-          }
-        });
+        addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene);
       }
@@ -290,13 +294,23 @@ export default class Game extends React.Component {
     });
 
     // change a team's score and display
-    socket.on('updateScore', ({ teamName, score }) => {
+    socket.on('update score', ({ teamName, score }) => {
       updateScore(teamName, score, scores);
     });
 
     // change texture of clue when receiving image data
-    socket.on('newClue', ({ clueURL }) => {
-      if (socket.role === 'clueGiver' && clueURL !== this.currentClueURL) {
+    socket.on('new clue', ({ clueURL }) => {
+      if (socket.role === 'clueGiver') {
+        socket.role = 'drawer';
+        this.clueMesh.dispose(true, true);
+        this.clueMesh = createImagePlane('hand', teammate, scene);
+        addDrawingObservable(this, scene, drawingMesh, socket);
+      } else {
+        socket.role = 'clueGiver';
+        // delete mesh, replace it with appropriate version, add observable
+        scene.onBeforeRenderObservable.remove(this.drawingObservable);
+        this.clueMesh.dispose(true, true);
+        this.clueMesh = createImagePlane('clue', teammate, scene);
         redrawTexture(this.clueMesh, clueURL, this.currentClueURL);
       }
     });
