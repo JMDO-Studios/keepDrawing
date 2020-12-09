@@ -118,12 +118,12 @@ function createTeammate(scene) {
 
 function createImagePlane(type, sphere, scene) {
   const { width, height } = document.getElementById('drawingCanvas');
-  const meshWidth = 1;
-  const scaledHeight = meshWidth * (height / width)
+  const meshWidth = 1; // change this value to adjust the mesh size
+  const scaledHeight = meshWidth * (height / width);
   const mesh = MeshBuilder.CreatePlane(type,
     { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth : sphere.position.x - meshWidth,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 : sphere.position.x - meshWidth / 2,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
