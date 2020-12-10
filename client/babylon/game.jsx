@@ -161,8 +161,7 @@ function createButton(type, parent, scene, instance, socket) {
   button.fontSize = 50;
   button.background = 'green';
   button.onPointerUpObservable.add(() => {
-    // console.log('current drawing URL:', instance.lastReceivedDrawingURL);
-    socket.emit('submitClue', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
+    socket.emit('submitDrawing', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
   });
   advancedTexture.addControl(button);
 }
@@ -217,9 +216,9 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
-    const { submitButton } = this;
-
+    // if (socket.role === 'clueGiver') {
+    //   this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
+    // }
     socket.on('comparisonResults', (payload) => console.log(payload.percent));
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -277,6 +276,7 @@ export default class Game extends React.Component {
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
       }
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
