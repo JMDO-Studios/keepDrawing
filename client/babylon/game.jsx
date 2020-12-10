@@ -131,8 +131,8 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-function redrawTexture(mesh, newURL, currentURL) {
-  currentURL = newURL;
+function redrawTexture(mesh, newURL) {
+  // currentURL = newURL;
   mesh.material.opacityTexture.updateURL(newURL);
 }
 
@@ -143,7 +143,7 @@ export default class Game extends React.Component {
       socket: props.socket,
       clientClueURL: '',
       lastSentDrawingURL: '',
-      lastReceivedDrawingURL: '',
+      lastReceivedDrawingURL: null,
     };
     this.compareImages = this.compareImages.bind(this);
   }
@@ -277,10 +277,18 @@ export default class Game extends React.Component {
     });
 
     // change texture of plane when receiving image data
+    // socket.on('drawingChanged', ({ drawingURL }) => {
+    //   if (drawingURL !== lastReceivedDrawingURL) {
+    //     redrawTexture(drawingMesh, drawingURL);
+    //     this.setState({ lastReceivedDrawingURL: drawingURL });
+    //     console.log('drawingUrl:', drawingURL, 'lastReceivedDrawingUrl:', lastReceivedDrawingURL);
+    //   }
+    // });
+
     socket.on('drawingChanged', ({ drawingURL }) => {
-      if (drawingURL !== lastReceivedDrawingURL) {
-        redrawTexture(drawingMesh, drawingURL, lastReceivedDrawingURL);
-      }
+      redrawTexture(drawingMesh, drawingURL);
+      this.setState({ lastReceivedDrawingURL: drawingURL });
+      console.log('drawingUrl:', drawingURL, 'lastReceivedDrawingUrl:', lastReceivedDrawingURL);
     });
 
     // change a team's score and display
@@ -321,11 +329,8 @@ export default class Game extends React.Component {
   }
 
   compareImages() {
-    const { socket, lastReceivedDrawingURL, clientClueURL } = this.state;
-    socket.emit('submitComparison', {
-      drawing: lastReceivedDrawingURL,
-      clue: clientClueURL,
-    });
+    const { socket, lastReceivedDrawingURL } = this.state;
+    socket.emit('submitComparison', lastReceivedDrawingURL);
   }
 
   render() {

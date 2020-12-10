@@ -134,11 +134,12 @@ async function websocketLogic(socket) {
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
-  socket.on('submitComparison', (payload) => {
-    Promise.resolve(getDiffFinal(payload.drawing, payload.clue)).then((percent) => {
-      socket.to(socket.teamRoom).emit('comparisonResults',
-        { percent: 100 - percent.misMatchPercentage });
-    });
+  socket.on('submitComparison', (drawing) => {
+    console.log(drawing);
+    // Promise.resolve(getDiffFinal(payload.drawing, payload.clue)).then((percent) => {
+    //   socket.to(socket.teamRoom).emit('comparisonResults',
+    //     { percent: 100 - percent.misMatchPercentage });
+    // });
   });
 }
 // socket.on('drawingSubmit', (clue, drawing) => {
