@@ -134,6 +134,14 @@ async function websocketLogic(socket) {
     //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+
+  socket.on('test submit', ({gameRoom, teamRoom}) => {
+    const clueURL = generateRandomURL(clueURLs);
+    const teamState = activeGames[gameRoom].teams[teamRoom];
+    teamState.points += 5;
+    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
+    io.to(teamRoom).emit('new clue', { clueURL });
+  });
 }
 
 module.exports = {
