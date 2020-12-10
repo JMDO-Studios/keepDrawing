@@ -1,40 +1,72 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router, Route, Switch,
-} from 'react-router-dom';
-import io from 'socket.io-client';
-import DrawingGame from './DrawingGame';
-import Header from './Header';
 import Lobby from './Lobby';
-import Footer from './Footer';
-import Waitingroom from './Waitingroom';
 
-const socket = io();
 
-export default class Routes extends Component {
-  render() {
-    return (
-      <Router>
-        <Header />
-        <Switch>
-          <Route
-            exact
-            path="/"
-            render={(props) => <Lobby {...props} socket={socket} />}
-          />
-          <Route
-            exact
-            path="/waitingroom"
-            render={(props) => <Waitingroom {...props} socket={socket} />}
-          />
-          <Route
-            exact
-            path="/imagegame"
-            render={(props) => <DrawingGame {...props} socket={socket} />}
-          />
-        </Switch>
-        <Footer />
-      </Router>
-    );
-  }
-}
+// export default class App extends Component {
+//   render(){
+//     const {socket} = this.props;
+      
+//       <Lobby socket={socket} />
+    
+//   }
+// }
+
+// export default class App extends Component{
+//   constructor(props){
+//     super(props)
+//     this.state = {
+//       name: ''
+//     }
+//   }
+//   componentDidMount(){
+//     const {socket} = this.props;
+//     this.setState({name: socket.name})
+//   }
+  
+//   render(){
+//     const{socket} = this.props;
+//     console.log('cidx ', this.socket);
+    
+//     return (
+//       <div>
+//         {/* {this.state.name  ? <Waitingroom socket={socket}/> : <Lobby socket={socket}/>} */}
+//         {/* {this.state.name && <Waitingroom socket={socket}/>} */}
+//         {!this.state.name && <Lobby socket={socket}/>}
+//       </div>
+//     )
+//   }
+// }
+
+
+
+
+
+
+
+// export default class Routes extends Component {
+//   render() {
+//     return (
+//       <Router>
+//         <Header />
+//         <Switch>
+//           <Route
+//             exact
+//             path="/"
+//             render={(props) => <Lobby {...props} socket={socket} />}
+//           />
+//           <Route
+//             exact
+//             path="/waitingroom"
+//             render={(props) => <Waitingroom {...props} socket={socket} />}
+//           />
+//           <Route
+//             exact
+//             path="/imagegame"
+//             render={(props) => <DrawingGame {...props} socket={socket} />}
+//           />
+//         </Switch>
+//         <Footer />
+//       </Router>
+//     );
+//   }
+// }

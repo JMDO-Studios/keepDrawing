@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Waitingroom from './Waitingroom';
 
 class Lobby extends Component {
   constructor(props) {
@@ -14,32 +15,38 @@ class Lobby extends Component {
     ev.preventDefault();
     const { player } = this.state;
     socket.name = player.name;
-    this.props.history.push('/waitingroom');
+    const { name } = socket;
+    socket.emit('change name', name);
   }
 
   render() {
     const { name } = this.state;
-
-    return (
+    const { socket } = this.props;
+    return (socket.name === '' ? (
       <div>
         <h1>Lobby Room</h1>
         <div className="lobby-div">
+          {/* <form className="lobby-form" onSubmit={this.save}> */}
           <form className="lobby-form" onSubmit={this.save}>
-            <label htmlFor="username" className="lobby-label">Username:
-              <input
-                name="username"
-                className="lobby-input"
-                value={name}
-                onChange={(ev) => this.setState({
-                  player: { name: ev.target.value },
-                })}
-              />
-            </label>
-            <button type="submit" className="lobby-button"> submit </button>
+            <label htmlFor="username" className="lobby-label">Username:</label>
+            <input
+              name="username"
+              className="lobby-input"
+              value={name}
+              onChange={(ev) => this.setState({
+                player: { name: ev.target.value },
+              })}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  this.save(e);
+                }
+              }}
+            />
+            <label> Press Enter</label>
           </form>
         </div>
       </div>
-    );
+    ) : (<Waitingroom socket={socket} />));
   }
 }
 

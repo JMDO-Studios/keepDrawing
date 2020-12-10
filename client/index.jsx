@@ -1,5 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Routes from './components';
+import io from 'socket.io-client';
+import Lobby from './components/Lobby';
 
-ReactDOM.render(<Routes />, document.getElementById('root'));
+const socket = io();
+socket.name = '';
+
+ReactDOM.render(<Lobby socket={socket} />, document.getElementById('root'));

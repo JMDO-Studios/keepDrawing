@@ -118,8 +118,10 @@ async function websocketLogic(socket) {
     console.log('a user disconnected');
     socket.leave('lobby');
   });
-  socket.on('change name', ({ name }) => {
+  socket.on('change name', ( name ) => {
+    console.log(name)
     socket.name = name;
+   
     joinLobby(socket);
   });
   socket.on('chat message', (message) => {

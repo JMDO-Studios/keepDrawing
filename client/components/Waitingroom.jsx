@@ -41,6 +41,7 @@ class Waitingroom extends Component {
   }
 
   render() {
+    console.log('waiting room ', this.props)
     const { message, messages } = this.state;
     const { editMessage, sendMessage } = this;
 
