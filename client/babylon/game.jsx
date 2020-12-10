@@ -141,9 +141,6 @@ export default class Game extends React.Component {
     super(props);
     this.state = {
       socket: props.socket,
-      clientClueURL: '',
-      lastSentDrawingURL: '',
-      lastReceivedDrawingURL: null,
     };
     this.compareImages = this.compareImages.bind(this);
   }
@@ -197,9 +194,9 @@ export default class Game extends React.Component {
 
     socket.on('comparisonResults', (payload) => console.log(payload.percent));
     // initialize plane texture URLs
-    // this.currentClueURL = '';
-    // this.lastSentDrawingURL = '';
-    // this.lastReceivedDrawingURL = '';
+    this.currentClueURL = '';
+    this.lastSentDrawingURL = '';
+    this.lastReceivedDrawingURL = '';
 
     window.addEventListener('resize', () => {
       this.engine.resize();
@@ -287,7 +284,7 @@ export default class Game extends React.Component {
 
     socket.on('drawingChanged', ({ drawingURL }) => {
       redrawTexture(drawingMesh, drawingURL);
-      this.setState({ lastReceivedDrawingURL: drawingURL });
+      this.lastReceivedDrawingURL = drawingURL;
       console.log('drawingUrl:', drawingURL, 'lastReceivedDrawingUrl:', lastReceivedDrawingURL);
     });
 
