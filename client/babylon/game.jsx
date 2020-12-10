@@ -216,10 +216,7 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    // if (socket.role === 'clueGiver') {
-    //   this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
-    // }
-    socket.on('comparisonResults', (payload) => console.log(payload.percent));
+
     // initialize plane texture URLs
     this.currentClueURL = '';
     this.lastSentDrawingURL = '';
@@ -291,18 +288,13 @@ export default class Game extends React.Component {
     });
 
     // change texture of plane when receiving image data
-    // socket.on('drawingChanged', ({ drawingURL }) => {
-    //   if (drawingURL !== lastReceivedDrawingURL) {
-    //     redrawTexture(drawingMesh, drawingURL);
-    //     this.setState({ lastReceivedDrawingURL: drawingURL });
-    //     console.log('drawingUrl:', drawingURL, 'lastReceivedDrawingUrl:', lastReceivedDrawingURL);
-    //   }
-    // });
-
     socket.on('drawingChanged', ({ drawingURL }) => {
       redrawTexture(drawingMesh, drawingURL);
       this.lastReceivedDrawingURL = drawingURL;
     });
+
+    // share resemblejs results with team
+    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {

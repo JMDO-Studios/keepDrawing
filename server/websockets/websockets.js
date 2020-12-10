@@ -131,10 +131,7 @@ async function websocketLogic(socket) {
   });
   socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
-    // run resemblejs
     const difference = getDiffFinal(drawing, teamState.currentClueURL);
-    console.log(difference);
-    console.log(difference.getImageDataUrl());
     io.to(socket.teamRoom).emit('comparisonResults',
       { percent: 100 - difference.misMatchPercentage });
     const clueURL = generateRandomURL(clueURLs);
