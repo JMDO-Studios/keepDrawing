@@ -7,9 +7,8 @@ import {
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
-  StandardMaterial, FreeCamera, DynamicTexture, Texture,
+  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3,
 } from '@babylonjs/core';
-import createButton from './button';
 
 function createTextBox(initialText, parent) {
   const text = new TextBlock('TextBlock', `${initialText}:`);
@@ -79,6 +78,7 @@ function initializeScene(canvas) {
   const scene = new Scene(engine);
   scene.gravity = new Vector3(0, -9.81, 0);
   scene.collisionsEnabled = true;
+  scene.ambientColor = new Color3(1, 1, 1);
 
   return [engine, scene];
 }
@@ -117,23 +117,72 @@ function createTeammate(scene) {
 }
 
 function createImagePlane(type, sphere, scene) {
+  const { width, height } = document.getElementById('drawingCanvas');
+  const meshWidth = 1; // change this value to adjust the mesh size
+  const scaledHeight = meshWidth * (height / width);
   const mesh = MeshBuilder.CreatePlane(type,
-    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'clue' ? sphere.position.x - 0.5 : sphere.position.x + 0.5,
-    sphere.position.y + 0.5,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 : sphere.position.x - meshWidth / 2,
+    sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
-  material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
-  material.opacityTexture.hasAlpha = true;
-  mesh.material = material;
+  if (type === 'clue' || type === 'drawing') {
+    material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
+    material.opacityTexture.hasAlpha = true;
+  } else {
+    const video = document.getElementById('myVideo');
+    material.emissiveTexture = new VideoTexture('video', video, scene, false, false);
 
+    // theoretically we can mix and match textures, levels, and colors until we find the brightness we like.
+    // this is going to take trial and error
+    material.emissiveTexture.level = 0.5;
+    // material.diffuseColor = new Color3(1, 1, 1);
+    // material.specularColor = new Color3(0, 0, 0);
+  }
+  mesh.material = material;
   return mesh;
 }
 
+function createButton(type, parent, scene, instance, socket) {
+  const mesh = MeshBuilder.CreatePlane(type,
+    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    scene);
+  mesh.position = new Vector3(
+    parent.position.x,
+    parent.position.y - 0.3,
+    parent.position.z,
+  );
+  const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
+  const button = Button.CreateSimpleButton('but1', 'Submit', scene);
+  button.width = 0.5;
+  button.height = 0.1;
+  button.color = 'white';
+  button.fontSize = 50;
+  button.background = 'green';
+  button.onPointerUpObservable.add(() => {
+    // console.log('current drawing URL:', instance.lastReceivedDrawingURL);
+    socket.emit('submitClue', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
+  });
+  advancedTexture.addControl(button);
+}
+
 function redrawTexture(mesh, newURL) {
-  // currentURL = newURL;
   mesh.material.opacityTexture.updateURL(newURL);
+}
+
+function addDrawingObservable(instance, scene, drawingMesh, socket) {
+  instance.drawingObservable = scene.onBeforeRenderObservable.add(() => {
+    const drawingImage = document.getElementById('drawingCanvas');
+    const drawingImageURL = drawingImage.toDataURL();
+    if (drawingImageURL !== instance.lastSentDrawingURL) {
+      redrawTexture(drawingMesh, drawingImageURL);
+      instance.lastSentDrawingURL = drawingImageURL;
+      socket.emit('drawingChanged', {
+        imageData: drawingImageURL,
+      });
+    }
+  });
 }
 
 export default class Game extends React.Component {
@@ -142,13 +191,10 @@ export default class Game extends React.Component {
     this.state = {
       socket: props.socket,
     };
-    this.compareImages = this.compareImages.bind(this);
   }
 
   componentDidMount() {
-    const {
-      socket, clientClueURL, lastSentDrawingURL, lastReceivedDrawingURL,
-    } = this.state;
+    const { socket } = this.state;
 
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
@@ -169,28 +215,10 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
-    this.clueMesh = createImagePlane('clue', teammate, scene);
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
-    const { clueMesh, drawingMesh } = this;
-
-    // create submit button
-    const mesh = MeshBuilder.CreatePlane('submit',
-      { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
-      scene);
-    mesh.position = new Vector3(
-      drawingMesh.position.x,
-      drawingMesh.position.y - 0.3,
-      drawingMesh.position.z,
-    );
-    const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-    const submitButton = Button.CreateSimpleButton('but1', 'Submit', scene);
-    submitButton.width = 0.5;
-    submitButton.height = 0.1;
-    submitButton.color = 'white';
-    submitButton.fontSize = 50;
-    submitButton.background = 'green';
-    submitButton.onPointerUpObservable.add(() => this.compareImages());
-    advancedTexture.addControl(submitButton);
+    const { drawingMesh } = this;
+    this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
+    const { submitButton } = this;
 
     socket.on('comparisonResults', (payload) => console.log(payload.percent));
     // initialize plane texture URLs
@@ -224,21 +252,6 @@ export default class Game extends React.Component {
       }
     });
 
-    // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
-    scene.onBeforeRenderObservable.add(() => {
-      const handImage = document.getElementById('drawingCanvas');
-      const imageURL = handImage.toDataURL();
-      if (imageURL !== lastSentDrawingURL) {
-        this.setState({
-          lastSentDrawingURL: imageURL,
-        });
-        // this.lastSentDrawingURL = imageURL;
-        socket.emit('drawingChanged', {
-          imageData: imageURL,
-        });
-      }
-    });
-
     // create GUI
     const {
       stackPanel, timer, clueCount, teamMateName,
@@ -258,19 +271,23 @@ export default class Game extends React.Component {
       socket.role = drawer.name === socket.name ? 'drawer' : 'clueGiver';
       teamMateName.text = teamMate.name;
 
+      // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
+      if (socket.role === 'drawer') {
+        this.clueMesh = createImagePlane('hand', teammate, scene);
+        addDrawingObservable(this, scene, drawingMesh, socket);
+      } else {
+        this.clueMesh = createImagePlane('clue', teammate, scene);
+      }
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
 
       // for each team, add their names, score, and submitted clues to HUD
       Object.keys(teams).forEach((team) => {
-        console.log(team);
         if (team !== teamName) {
           const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
           initializeScores(label, scores, team, stackPanel);
         }
       });
-
-      // change your player role and chose with objects to render accordingly
     });
 
     // change texture of plane when receiving image data
@@ -285,18 +302,27 @@ export default class Game extends React.Component {
     socket.on('drawingChanged', ({ drawingURL }) => {
       redrawTexture(drawingMesh, drawingURL);
       this.lastReceivedDrawingURL = drawingURL;
-      console.log('drawingUrl:', drawingURL, 'lastReceivedDrawingUrl:', lastReceivedDrawingURL);
     });
 
     // change a team's score and display
-    socket.on('updateScore', ({ teamName, score }) => {
+    socket.on('update score', ({ teamName, score }) => {
       updateScore(teamName, score, scores);
     });
 
     // change texture of clue when receiving image data
-    socket.on('newClue', ({ clueURL }) => {
-      if (clueURL !== clientClueURL) {
-        redrawTexture(clueMesh, clueURL, clientClueURL);
+    socket.on('new clue', ({ clueURL }) => {
+      if (socket.role === 'clueGiver') {
+        socket.role = 'drawer';
+        this.clueMesh.dispose(true, true);
+        this.clueMesh = createImagePlane('hand', teammate, scene);
+        addDrawingObservable(this, scene, drawingMesh, socket);
+      } else {
+        socket.role = 'clueGiver';
+        // delete mesh, replace it with appropriate version, add observable
+        scene.onBeforeRenderObservable.remove(this.drawingObservable);
+        this.clueMesh.dispose(true, true);
+        this.clueMesh = createImagePlane('clue', teammate, scene);
+        redrawTexture(this.clueMesh, clueURL);
       }
     });
 
@@ -306,7 +332,7 @@ export default class Game extends React.Component {
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
-      redrawTexture(clueMesh, currentClueURL, this.currentClueURL);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
@@ -323,11 +349,6 @@ export default class Game extends React.Component {
     engine.runRenderLoop(() => {
       scene.render();
     });
-  }
-
-  compareImages() {
-    const { socket, lastReceivedDrawingURL } = this.state;
-    socket.emit('submitComparison', lastReceivedDrawingURL);
   }
 
   render() {
