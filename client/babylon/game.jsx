@@ -289,7 +289,7 @@ export default class Game extends React.Component {
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
       if (drawingURL !== this.lastReceivedDrawingURL) {
-        redrawTexture(drawingMesh, drawingURL, this.lastReceivedDrawingURL);
+        redrawTexture(drawingMesh, drawingURL);
       }
     });
 
@@ -311,7 +311,7 @@ export default class Game extends React.Component {
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene);
-        redrawTexture(this.clueMesh, clueURL, this.currentClueURL);
+        redrawTexture(this.clueMesh, clueURL);
       }
     });
 
@@ -321,7 +321,7 @@ export default class Game extends React.Component {
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL, this.currentClueURL);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {

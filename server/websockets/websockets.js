@@ -137,8 +137,9 @@ async function websocketLogic(socket) {
 
   socket.on('test submit', ({gameRoom, teamRoom}) => {
     const clueURL = generateRandomURL(clueURLs);
-    activeGames[gameRoom].teams[teamRoom].points += 5;
-    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: activeGames[socket.gameRoom].teams[socket.teamRoom].points });
+    const teamState = activeGames[gameRoom].teams[teamRoom];
+    teamState.points += 5;
+    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
     io.to(teamRoom).emit('new clue', { clueURL });
   });
 }
