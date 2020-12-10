@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
+import DrawingGame from './DrawingGame';
 
 class Waitingroom extends Component {
   constructor(props) {
     super(props);
     this.state = {
       message: '',
-      messages: [`welcome ${this.props.socket.name}`],
+      messages: [`welcome, ${this.props.socket.name}!`],
+      game: false,
     };
     this.editMessage = this.editMessage.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
@@ -15,8 +17,9 @@ class Waitingroom extends Component {
     const { socket } = this.props;
     socket.emit('change name', { name: socket.name });
     socket.on('goToGame', () => {
-      this.props.history.push('/imagegame');
+      this.state.game = true;
     });
+    console.log(this.state)
     socket.on('chat message', (msg) => {
       this.setState({
         message: msg,
@@ -41,11 +44,11 @@ class Waitingroom extends Component {
   }
 
   render() {
-    console.log('waiting room ', this.props)
     const { message, messages } = this.state;
     const { editMessage, sendMessage } = this;
-
-    return (
+    const { game } = this.state;
+    const { socket } = this.props;
+    return !game ? (
       <div id="wait">
         <ul id="messages">
           {messages.map((m, i) => <li key={i}>{m}</li>)}
@@ -65,7 +68,7 @@ class Waitingroom extends Component {
         </form>
         <div>Press Enter</div>
       </div>
-    );
+    ) : (<DrawingGame socket={socket} />);
   }
 }
 

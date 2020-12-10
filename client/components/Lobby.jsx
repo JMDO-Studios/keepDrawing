@@ -42,7 +42,7 @@ class Lobby extends Component {
                 }
               }}
             />
-            <label> Press Enter</label>
+            <label> Press Enter, Any key</label>
           </form>
         </div>
       </div>
