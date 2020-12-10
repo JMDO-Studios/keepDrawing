@@ -216,10 +216,9 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    // if (socket.role === 'clueGiver') {
-    //   this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
-    // }
+
     socket.on('comparisonResults', (payload) => console.log(payload.percent));
+
     // initialize plane texture URLs
     this.currentClueURL = '';
     this.lastSentDrawingURL = '';
