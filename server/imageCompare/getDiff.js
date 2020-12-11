@@ -1,4 +1,4 @@
-const compareImages = require('resemblejs/compareImages');
+// const compareImages = require('resemblejs/compareImages');
 const resemble = require('resemblejs');
 
 // const fs = require('fs');
@@ -45,11 +45,11 @@ const resemble = require('resemblejs');
 
 resemble.outputSettings({ useCrossOrigin: false });
 
-function getDiffFinal(drawing, clue) {
+function getDiff(drawing, clue) {
   let diff;
   resemble(drawing).compareTo(clue).ignoreNothing()
     .onComplete(function(data) { diff = data });
   return diff;
 }
 
-module.exports = { getDiffFinal };
+module.exports = { getDiff };

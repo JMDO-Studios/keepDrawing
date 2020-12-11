@@ -220,8 +220,6 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-    const { buttonMesh } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -277,10 +275,10 @@ export default class Game extends React.Component {
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene);
         addDrawingObservable(this, scene, drawingMesh, socket);
-        this.buttonMesh.dispose(true, true);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene);
-        this.submitButton = createButton(buttonMesh, this, socket, scene);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
