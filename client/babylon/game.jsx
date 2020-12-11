@@ -144,26 +144,30 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-function createButton(type, sphere, scene, socket) {
+function createButtonPlane(type, parent, scene) {
   const mesh = MeshBuilder.CreatePlane(type,
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(
-    sphere.position.x - 0.5,
-    sphere.position.y,
-    sphere.position.z,
+    parent.position.x,
+    parent.position.y - 0.3,
+    parent.position.z,
   );
+  return mesh;
+}
+
+function createButton(mesh, instance, socket, scene) {
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-  const button1 = Button.CreateSimpleButton('but1', 'Click Me', scene);
-  button1.width = 1;
-  button1.height = 0.4;
-  button1.color = 'white';
-  button1.fontSize = 50;
-  button1.background = 'green';
-  button1.onPointerUpObservable.add(() => {
-    socket.emit('test submit', { gameRoom: socket.gameName, teamRoom: socket.teamName });
+  const button = Button.CreateSimpleButton('but1', 'Submit', scene);
+  button.width = 0.5;
+  button.height = 0.1;
+  button.color = 'white';
+  button.fontSize = 50;
+  button.background = 'green';
+  button.onPointerUpObservable.add(() => {
+    socket.emit('submitDrawing', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
   });
-  advancedTexture.addControl(button1);
+  advancedTexture.addControl(button);
 }
 
 function redrawTexture(mesh, newURL) {
@@ -187,7 +191,9 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { socket: props.socket };
+    this.state = {
+      socket: props.socket,
+    };
   }
 
   componentDidMount() {
@@ -214,8 +220,6 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
-    this.submitButton = createButton('submit', teammate, scene, socket);
-    const { submitButton } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -273,6 +277,8 @@ export default class Game extends React.Component {
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
@@ -288,10 +294,12 @@ export default class Game extends React.Component {
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      if (drawingURL !== this.lastReceivedDrawingURL) {
-        redrawTexture(drawingMesh, drawingURL);
-      }
+      redrawTexture(drawingMesh, drawingURL);
+      this.lastReceivedDrawingURL = drawingURL;
     });
+
+    // share resemblejs results with team
+    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {
@@ -302,6 +310,7 @@ export default class Game extends React.Component {
     socket.on('new clue', ({ clueURL }) => {
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
+        this.buttonMesh.dispose(true, true);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('hand', teammate, scene);
         addDrawingObservable(this, scene, drawingMesh, socket);
@@ -312,6 +321,8 @@ export default class Game extends React.Component {
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene);
         redrawTexture(this.clueMesh, clueURL);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
     });
 

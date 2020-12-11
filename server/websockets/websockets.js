@@ -7,7 +7,7 @@ const {
   http,
   io,
 } = require('../serverbuild');
-// const { getDiffTestSocket } = require('../imageCompare/getDiff');
+const { getDiff } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
@@ -113,6 +113,7 @@ function joinLobby(socket) {
     io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
 }
+
 async function websocketLogic(socket) {
   socket.on('disconnect', () => {
     console.log('a user disconnected');
@@ -126,18 +127,14 @@ async function websocketLogic(socket) {
     io.to('lobby').emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
-    // commented out resemblejs test to speed up communication.
-    //  will need to be added back in on drawing submission
-    // Promise.resolve(getDiffTestSocket(imageData.data,
-    // './public/testAssets/rightblack.jpg')).then((percent) => {
-    //   socket.to(socket.teamRoom).emit('imageClicked',
-    //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
-
-  socket.on('test submit', ({gameRoom, teamRoom}) => {
-    const clueURL = generateRandomURL(clueURLs);
+  socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
+    const difference = getDiff(drawing, teamState.currentClueURL);
+    io.to(socket.teamRoom).emit('comparisonResults',
+      { percent: 100 - difference.misMatchPercentage });
+    const clueURL = generateRandomURL(clueURLs);
     teamState.points += 5;
     io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
     io.to(teamRoom).emit('new clue', { clueURL });
