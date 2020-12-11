@@ -3,7 +3,7 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Rectangle, StackPanel, Control,
+  AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -11,54 +11,59 @@ import {
 } from '@babylonjs/core';
 
 function createTextBox(initialText, parent) {
+  const canvasHeight = document.getElementById('gameCanvas').height;
   const text = new TextBlock('TextBlock', `${initialText}:`);
-  text.paddingLeft = '5px';
   text.color = 'gold';
-  const rect1 = new Rectangle();
-  rect1.width = 1;
-  rect1.height = '40px';
-  rect1.thickness = 0;
   text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-  parent.addControl(rect1);
-  rect1.addControl(text);
-
-  return rect1;
+  text.width = 1;
+  parent.addRowDefinition(canvasHeight / 2 / parent.rowCount, true);
+  for (let row = 0; row < parent.rowCount - 1; row += 1) {
+    parent.setRowDefinition(row, canvasHeight / 2 / parent.rowCount, true);
+  }
+  const row = parent.rowCount - 1;
+  parent.addControl(text, row, 0);
+  return [text, row];
 }
 
-function addText(initialText, textBox) {
+function addText(initialText, parent) {
   const text = new TextBlock('TextBlock', initialText);
   text.color = 'gold';
-  text.paddingRight = '5px';
   text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  textBox.addControl(text);
+  text.width = 1;
+  const row = parent.rowCount - 1;
+  parent.addControl(text, row, 1);
   return text;
 }
 
 function createGUI() {
-  const stackPanel = new StackPanel();
-  stackPanel.width = 0.2;
-  stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-  stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  const grid = new Grid();
+  grid.width = 0.2;
+  grid.addColumnDefinition(0.8, false);
+  grid.addColumnDefinition(0.3, false);
+  grid.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  grid.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  advancedTexture.addControl(stackPanel);
+  advancedTexture.addControl(grid);
 
   // create timer
-  const teamMateBox = createTextBox('Your teammate is', stackPanel);
-  const timeBox = createTextBox('Time Left', stackPanel);
-  const countBox = createTextBox('Images submitted', stackPanel);
+  createTextBox('Your teammate is', grid);
+  const teamMateName = addText('0', grid);
 
-  const timer = addText('Get Ready!', timeBox);
-  const clueCount = addText('0', countBox);
-  const teamMateName = addText('', teamMateBox);
+  createTextBox('Time Left', grid);
+  const timer = addText('Get Ready!', grid);
+
+  createTextBox('Images submitted', grid);
+  const clueCount = addText('0', grid);
 
   return {
-    stackPanel, timer, clueCount, teamMateName,
+    grid, timer, clueCount, teamMateName,
   };
 }
 
 function createScoreDisplay(teamNames, parent) {
-  const scoreBox = createTextBox(teamNames, parent);
-  const score = addText('0', scoreBox);
+  createTextBox(teamNames, parent);
+  const score = addText('0', parent);
   return score;
 }
 
@@ -131,14 +136,11 @@ function createImagePlane(type, sphere, scene) {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
   } else {
+    mesh.rotation.y = Math.PI; // rotate the mesh so that the back is showing to the player and video mirrors horizontally
     const video = document.getElementById('myVideo');
-    material.emissiveTexture = new VideoTexture('video', video, scene, false, false);
-
-    // theoretically we can mix and match textures, levels, and colors until we find the brightness we like.
-    // this is going to take trial and error
-    material.emissiveTexture.level = 0.5;
-    // material.diffuseColor = new Color3(1, 1, 1);
-    // material.specularColor = new Color3(0, 0, 0);
+    const webcamTexture = new VideoTexture('video', video, scene, false, false);
+    material.emissiveTexture = webcamTexture;
+    material.diffuseTexture = webcamTexture; // same texture must be assigned to both emissive and diffuse, diffuse only is too dark and emissive only is too bright and washed out
   }
   mesh.material = material;
   return mesh;
@@ -254,7 +256,7 @@ export default class Game extends React.Component {
 
     // create GUI
     const {
-      stackPanel, timer, clueCount, teamMateName,
+      grid, timer, clueCount, teamMateName,
     } = createGUI();
 
     const scores = {};
@@ -281,13 +283,14 @@ export default class Game extends React.Component {
         this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
-      initializeScores('Your Score', scores, teamName, stackPanel);
+      console.log('grid is', grid);
+      initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
       Object.keys(teams).forEach((team) => {
         if (team !== teamName) {
           const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          initializeScores(label, scores, team, stackPanel);
+          initializeScores(label, scores, team, grid);
         }
       });
     });
@@ -345,7 +348,6 @@ export default class Game extends React.Component {
         } else timer.text = 'BOOM!';
       });
     });
-
     engine.runRenderLoop(() => {
       scene.render();
     });
