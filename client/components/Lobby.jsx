@@ -15,8 +15,7 @@ class Lobby extends Component {
     ev.preventDefault();
     const { player } = this.state;
     socket.name = player.name;
-    const { name } = socket;
-    socket.emit('change name', name);
+    socket.emit('change name', player.name);
   }
 
   render() {
@@ -26,7 +25,6 @@ class Lobby extends Component {
       <div>
         <h1>Lobby Room</h1>
         <div className="lobby-div">
-          {/* <form className="lobby-form" onSubmit={this.save}> */}
           <form className="lobby-form" onSubmit={this.save}>
             <label htmlFor="username" className="lobby-label">Username:</label>
             <input

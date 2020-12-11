@@ -5,5 +5,6 @@ import Lobby from './components/Lobby';
 
 const socket = io();
 socket.name = '';
+socket.game = '';
 
 ReactDOM.render(<Lobby socket={socket} />, document.getElementById('root'));
