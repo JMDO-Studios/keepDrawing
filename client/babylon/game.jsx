@@ -144,7 +144,7 @@ function createImagePlane(type, sphere, scene) {
   return mesh;
 }
 
-function createButton(type, parent, scene, instance, socket) {
+function createButtonPlane(type, parent, scene, instance, socket) {
   const mesh = MeshBuilder.CreatePlane(type,
     { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
     scene);
@@ -153,6 +153,18 @@ function createButton(type, parent, scene, instance, socket) {
     parent.position.y - 0.3,
     parent.position.z,
   );
+  return mesh;
+}
+
+function createButton(mesh, instance, socket, scene) {
+  // const mesh = MeshBuilder.CreatePlane(type,
+  //   { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+  //   scene);
+  // mesh.position = new Vector3(
+  //   parent.position.x,
+  //   parent.position.y - 0.3,
+  //   parent.position.z,
+  // );
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
   const button = Button.CreateSimpleButton('but1', 'Submit', scene);
   button.width = 0.5;
@@ -216,6 +228,8 @@ export default class Game extends React.Component {
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene);
     const { drawingMesh } = this;
+    this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+    const { buttonMesh } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -271,9 +285,10 @@ export default class Game extends React.Component {
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.buttonMesh.dispose(true, true);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene);
-        this.submitButton = createButton('submit', drawingMesh, scene, this, socket);
+        this.submitButton = createButton(buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
       initializeScores('Your Score', scores, teamName, stackPanel);
@@ -305,6 +320,7 @@ export default class Game extends React.Component {
     socket.on('new clue', ({ clueURL }) => {
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
+        this.buttonMesh.dispose(true, true);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('hand', teammate, scene);
         addDrawingObservable(this, scene, drawingMesh, socket);
@@ -315,6 +331,8 @@ export default class Game extends React.Component {
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene);
         redrawTexture(this.clueMesh, clueURL);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
     });
 
