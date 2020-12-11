@@ -15,17 +15,16 @@ class Waitingroom extends Component {
 
   componentDidMount() {
     const { socket } = this.props;
-    const { messages } = this.state;
     socket.emit('change name', { name: socket.name });
     socket.on('goToGame', () => {
+      this.setState({ game: true });
     });
     socket.on('chat message', (msg) => {
       this.setState({
         message: msg,
-        messages: [...messages, msg],
+        messages: [...this.state.messages, msg],
       });
     });
-    socket.game = true;
   }
 
   editMessage(e) {
@@ -45,9 +44,9 @@ class Waitingroom extends Component {
 
   render() {
     const { socket } = this.props;
-    const { message, messages } = this.state;
+    const { message, messages, game } = this.state;
     const { editMessage, sendMessage } = this;
-    return !socket.game ? (
+    return !game ? (
       <div id="wait">
         <ul id="messages">
           {messages.map((m, i) => <li key={i}>{m}</li>)}
@@ -65,7 +64,7 @@ class Waitingroom extends Component {
             }}
           />
         </form>
-        <div>Type...Press Enter</div>
+        <div>Press Enter</div>
       </div>
     ) : (<DrawingGame socket={socket} />);
   }

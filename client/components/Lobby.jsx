@@ -16,6 +16,7 @@ class Lobby extends Component {
     const { player } = this.state;
     socket.name = player.name;
     socket.emit('change name', player.name);
+    this.setState({ player: socket.name });
   }
 
   render() {
@@ -40,7 +41,7 @@ class Lobby extends Component {
                 }
               }}
             />
-            <label> Press Enter, Any key</label>
+            <label> Press Enter </label>
           </form>
         </div>
       </div>
