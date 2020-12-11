@@ -47,7 +47,7 @@ resemble.outputSettings({ useCrossOrigin: false });
 
 function getDiffFinal(drawing, clue) {
   let diff;
-  resemble(drawing).compareTo(clue).ignoreLess()
+  resemble(drawing).compareTo(clue).ignoreNothing()
     .onComplete(function(data) { diff = data });
   return diff;
 }
