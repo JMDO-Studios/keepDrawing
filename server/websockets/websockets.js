@@ -140,7 +140,7 @@ async function websocketLogic(socket) {
     const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 100, 0, 100);
     console.log('scaled difference', scaledDifference);
     const clueURL = generateRandomURL(clueURLs);
-    this.currentClueURL = clueURL;
+    teamState.currentClueURL = clueURL;
     if (scaledDifference > 0) {
       teamState.points += Math.round(scaledDifference);
       io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });

@@ -1,6 +1,4 @@
 import React from 'react';
-import '@babylonjs/core/Debug/debugLayer';
-import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
   AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
@@ -99,7 +97,7 @@ function createGround(scene) {
 }
 
 function initalizeCamera(canvas, scene) {
-  const camera = new FreeCamera('FreeCamera', new Vector3(0, 1, 0), scene);
+  const camera = new FreeCamera('FreeCamera', new Vector3(0, 1.3, 0), scene);
   camera.ellipsoid = new Vector3(1, 1, 1);
   camera.applyGravity = true;
   camera.checkCollisions = true;
@@ -156,8 +154,8 @@ function createButtonPlane(type, parent, scene) {
     scene);
   mesh.position = new Vector3(
     parent.position.x,
-    parent.position.y - 0.4,
-    parent.position.z,
+    parent.position.y - 0.3,
+    parent.position.z - 0.5,
   );
   return mesh;
 }
@@ -249,16 +247,6 @@ export default class Game extends React.Component {
         default:
           break; // do not block other keys
       }
-      // hide/show the Inspector
-      // Shift+Ctrl+Alt+I
-      if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
-        if (scene.debugLayer.isVisible()) {
-          scene.debugLayer.hide();
-        } else {
-          scene.debugLayer.show();
-        }
-      }
-    });
 
     // create GUI
     const {
