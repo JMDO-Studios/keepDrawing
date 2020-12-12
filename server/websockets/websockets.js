@@ -8,7 +8,7 @@ const {
   http,
   io,
 } = require('../serverbuild');
-const { getDiff, getDiffFast } = require('../imageCompare/getDiff');
+const { getDiff } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
@@ -133,7 +133,7 @@ async function websocketLogic(socket) {
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
-  socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
+  socket.on('submitDrawing', ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
     const currentClue = teamState.currentClueURL;
     const difference = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);

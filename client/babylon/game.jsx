@@ -10,7 +10,7 @@ import {
 
 function createTextBox(initialText, parent) {
   const canvasHeight = document.getElementById('gameCanvas').height;
-  const text = new TextBlock('TextBlock', `${initialText}:`);
+  const text = new TextBlock('TextBlock', `${initialText}`);
   text.color = 'gold';
   text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
   text.width = 1;
@@ -44,18 +44,15 @@ function createGUI() {
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
   advancedTexture.addControl(grid);
 
-  // create timer
+  // create grid elements
   createTextBox('Your teammate is', grid);
   const teamMateName = addText('0', grid);
 
   createTextBox('Time Left', grid);
   const timer = addText('Get Ready!', grid);
 
-  createTextBox('Images submitted', grid);
-  const clueCount = addText('0', grid);
-
   return {
-    grid, timer, clueCount, teamMateName,
+    grid, timer, teamMateName,
   };
 }
 
@@ -140,9 +137,7 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
     material.emissiveTexture = webcamTexture;
     material.diffuseTexture = webcamTexture; // same texture must be assigned to both emissive and diffuse, diffuse only is too dark and emissive only is too bright and washed out
   }
-  // mesh.outlineColor = Color3.Red();
-  // mesh.outlineWidth = 0.1;
-  // mesh.renderOutline = true;
+
   highlightLayer.addMesh(mesh, Color3.Red());
   mesh.material = material;
   return mesh;
@@ -251,7 +246,7 @@ export default class Game extends React.Component {
 
     // create GUI
     const {
-      grid, timer, clueCount, teamMateName,
+      grid, timer, teamMateName,
     } = createGUI();
 
     const scores = {};
@@ -259,7 +254,7 @@ export default class Game extends React.Component {
     /// register socket events /////////////
 
     socket.on('initialize', ({
-      teamName, gameName, members, drawer, clueGiver, teams,
+      teamName, gameName, members, drawer, teams,
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
@@ -282,9 +277,10 @@ export default class Game extends React.Component {
       initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
-      Object.keys(teams).forEach((team) => {
+      Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
-          const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          const label = `Team ${idx}`;
           initializeScores(label, scores, team, grid);
         }
       });
