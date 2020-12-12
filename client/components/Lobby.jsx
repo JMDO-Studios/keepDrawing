@@ -10,14 +10,13 @@ class Lobby extends Component {
   }
 
   save(ev) {
-    const { socket, handleStateChange } = this.props;
+    const { socket, handleStatusChange } = this.props;
     ev.preventDefault();
-    const { player } = this.state;
-    socket.name = player.name;
-    handleStateChange('waiting room');
-    // this.setState({ status: 'waiting room' });
-    // console.log('submitted');
-    // this.props.history.push('/waitingroom');
+    if (this.state.player.name) {
+      const { player } = this.state;
+      socket.name = player.name;
+      handleStatusChange('waiting room');
+    }
   }
 
   render() {

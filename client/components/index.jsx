@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import io from 'socket.io-client';
 import * as handTrack from 'handtrackjs';
 import DrawingGame from './DrawingGame';
-// import Header from './Header';
 import Lobby from './Lobby';
-// import Footer from './Footer';
 import Waitingroom from './Waitingroom';
 
 const socket = io();
@@ -31,19 +29,11 @@ export default class Routes extends Component {
     };
     this.startVideo = this.startVideo.bind(this);
     this.startGame = this.startGame.bind(this);
-    this.handleStateChange = this.handleStateChange.bind(this);
+    this.handleStatusChange = this.handleStatusChange.bind(this);
   }
 
-  // componentDidUpdate(prevProps, prevState) {
-  //   const { status } = this.state;
-  //   if (prevState.status !== status) {
-  //     console.log('status has changed');
-  //   }
-  // }
-
-  handleStateChange(value) {
-    // ev.preventDefault();
-    this.setState({ status: value });
+  handleStatusChange(status) {
+    this.setState({ status });
   }
 
   startVideo() {
@@ -51,7 +41,6 @@ export default class Routes extends Component {
       .then((status) => {
         if (status) {
           this.setState({ isVideo: true, message: 'Create Username and Press Submit to Join Waiting Room' });
-          // this.runDetection();
         } else {
           this.setState({ message: 'Please enable your video' });
         }
@@ -70,20 +59,20 @@ export default class Routes extends Component {
   render() {
     this.startGame();
     const { status, isVideo, message } = this.state;
-    const { handleStateChange } = this;
+    const { handleStatusChange } = this;
     if (status === 'lobby') {
       return (
-        <Lobby socket={socket} message={message} handleStateChange={handleStateChange} />
+        <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} />
       );
     }
     if (status === 'waiting room') {
       return (
-        <Waitingroom socket={socket} message={message} handleStateChange={handleStateChange} />
+        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
       );
     }
     if (status === 'game') {
       return (
-        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} />
+        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} />
       );
     }
     return null;
