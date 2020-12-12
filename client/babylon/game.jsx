@@ -1,7 +1,7 @@
 import React from 'react';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
+  AdvancedDynamicTexture, Button, TextBlock, Control, Grid, StackPanel3D, GUI3DManager,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -116,7 +116,7 @@ function createTeammate(scene) {
   return sphere;
 }
 
-function createImagePlane(type, sphere, scene, highlightLayer) {
+function createImagePlane(type, sphere, scene, highlightLayer, guiManager= null, controls=null, instance = null) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
@@ -130,6 +130,9 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   if (type === 'clue' || type === 'drawing') {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
+    if (type ==='drawing'){
+      instance.drawingControls = createDrawingControlPanel(mesh, guiManager, controls);
+    }
   } else {
     mesh.rotation.y = Math.PI; // rotate the mesh so that the back is showing to the player and video mirrors horizontally
     const video = document.getElementById('myVideo');
@@ -155,7 +158,7 @@ function createButtonPlane(type, parent, scene) {
   return mesh;
 }
 
-function createButton(mesh, instance, socket, scene) {
+function createSubmitButton(mesh, instance, socket, scene) {
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
   const button = Button.CreateSimpleButton('but1', 'Submit', scene);
   // button.width = 1;
@@ -168,6 +171,30 @@ function createButton(mesh, instance, socket, scene) {
   });
   advancedTexture.addControl(button);
 }
+
+function makeControlButton(control){}
+function populateControlButtons(panel, controls) {
+  controls.forEach((control) => {
+    const button = makeControlButton(control);
+    panel.addControl(button);
+  });
+  parent.addControl(panel);
+}
+
+function createDrawingControlPanel(parent, guiManager, controls) {
+  const panel = new StackPanel3D();
+    panel.margin = 0.02;
+    panel.isVertical = true;
+    panel.position.x = parent.position.x;
+    panel.position.y = parent.position.y- 0.3;
+    panel.position.z = parent.position.z;
+
+  populateControlButtons(panel, controls);
+  guiManager.addControl(panel);
+  return panel
+}
+
+
 
 function redrawTexture(mesh, newURL) {
   mesh.material.opacityTexture.updateURL(newURL);
@@ -208,7 +235,7 @@ export default class Game extends React.Component {
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
-    this.highlightLayer = new HighlightLayer("hl1", scene);
+    this.highlightLayer = new HighlightLayer('hl1', scene);
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
@@ -249,6 +276,8 @@ export default class Game extends React.Component {
       grid, timer, teamMateName,
     } = createGUI();
 
+    const buttonManager = new GUI3DManager(scene);
+
     const scores = {};
 
     /// register socket events /////////////
@@ -270,7 +299,7 @@ export default class Game extends React.Component {
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        this.submitButton = createSubmitButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
       console.log('grid is', grid);
@@ -316,7 +345,7 @@ export default class Game extends React.Component {
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
         this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        this.submitButton = createSubmitButton(this.buttonMesh, this, socket, scene);
       }
     });
 
