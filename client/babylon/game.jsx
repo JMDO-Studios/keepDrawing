@@ -335,7 +335,7 @@ export default class Game extends React.Component {
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {

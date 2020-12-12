@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const scale = require('scale-number-range');
 const { v4: uuidv4 } = require('uuid');
 const {
   express,
@@ -7,19 +8,21 @@ const {
   http,
   io,
 } = require('../serverbuild');
-const { getDiff } = require('../imageCompare/getDiff');
+const { getDiff, getDiffFast } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
   return io.sockets.adapter.rooms.get(roomName);
 }
 
-function generateURLArray(directoryPath) {
+function generateURLArray(directoryPath, emptyCanvasURL) {
   const urls = [];
   const fileNames = fs.readdirSync(directoryPath);
   fileNames.forEach((file) => {
     const bitmap = fs.readFileSync(path.join(directoryPath, file), { encoding: 'base64' });
-    urls.push(`data:image/png;base64,${bitmap}`);
+    const data = { data: `data:image/png;base64,${bitmap}` };
+    data.differenceFromBlank = parseFloat(getDiff(emptyCanvasURL, data.data).misMatchPercentage);
+    urls.push(data);
   });
   return urls;
 }
@@ -30,7 +33,8 @@ function generateRandomURL(urlArray) {
 }
 
 const clueDirectoryPath = path.join(__dirname, '../assets/clues');
-const clueURLs = generateURLArray(clueDirectoryPath);
+const emptyCanvasURL = 'data:image/png;base64,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';
+const clueURLs = generateURLArray(clueDirectoryPath, emptyCanvasURL);
 const activeGames = {};
 
 function createActiveGameObject(gameName, lobbyRoster) {
@@ -131,13 +135,23 @@ async function websocketLogic(socket) {
   });
   socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
-    const difference = getDiff(drawing, teamState.currentClueURL);
-    io.to(socket.teamRoom).emit('comparisonResults',
-      { percent: 100 - difference.misMatchPercentage });
+    const currentClue = teamState.currentClueURL;
+    // const difference = parseFloat(getDiffFast(drawing, currentClue.differenceFromBlank, currentClue.data).misMatchPercentage);
+    const differenceFromClue = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);
+    const differenceFromBlank = parseFloat(getDiff(drawing, emptyCanvasURL).misMatchPercentage);
+    console.log('difference from clue', differenceFromClue);
+    console.log('difference from blank', differenceFromBlank);
+    console.log('difference of difference', differenceFromBlank - differenceFromClue);
+    // const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 5, 0, 100);
+    // console.log('scaled difference', scaledDifference);
     const clueURL = generateRandomURL(clueURLs);
-    teamState.points += 5;
-    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
-    io.to(teamRoom).emit('new clue', { clueURL });
+    this.currentClueURL = clueURL;
+    // if (scaledDifference > 0) {
+      // teamState.points += Math.round(scaledDifference);
+      teamState.points += 5;
+      io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
+    // }
+    io.to(teamRoom).emit('new clue', { clueURL: clueURL.data });
   });
 }
 
