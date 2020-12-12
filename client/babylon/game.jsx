@@ -150,12 +150,12 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
 
 function createButtonPlane(type, parent, scene) {
   const mesh = MeshBuilder.CreatePlane(type,
-    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    { width: 0.5, height: 0.1, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(
     parent.position.x,
-    parent.position.y - 0.3,
-    parent.position.z - 0.5,
+    parent.position.y - 0.5,
+    parent.position.z,
   );
   return mesh;
 }
@@ -163,8 +163,8 @@ function createButtonPlane(type, parent, scene) {
 function createButton(mesh, instance, socket, scene) {
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
   const button = Button.CreateSimpleButton('but1', 'Submit', scene);
-  button.width = 0.5;
-  button.height = 0.1;
+  // button.width = 1;
+  button.height = 1;
   button.color = 'white';
   button.fontSize = 50;
   button.background = 'green';
