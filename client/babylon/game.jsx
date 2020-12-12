@@ -199,7 +199,7 @@ export default class Game extends React.Component {
   }
 
   componentDidMount() {
-    const { socket } = this.state;
+    const { socket } = this.props;
 
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
@@ -267,6 +267,8 @@ export default class Game extends React.Component {
       teamName, gameName, members, drawer, clueGiver, teams,
     }) => {
       socket.teamName = teamName;
+      console.log(teamName);
+      console.log(socket);
       socket.gameName = gameName;
       const [teamMate] = members.filter((member) => member.id !== socket.id);
       socket.teamMate = teamMate.name;

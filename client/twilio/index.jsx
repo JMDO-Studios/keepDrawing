@@ -6,7 +6,6 @@ export default class TwilioChat extends Component {
     super(props);
     this.state = {
       token: '',
-      socket: this.props,
     };
     this.joinTeam = this.joinTeam.bind(this);
   }
@@ -25,7 +24,8 @@ export default class TwilioChat extends Component {
   }
 
   render() {
-    const { socket, token } = this.state;
+    const { token } = this.state;
+    const { socket } = this.props;
     const { name, teamName } = socket;
     return (
       <div>

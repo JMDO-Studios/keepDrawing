@@ -17,7 +17,10 @@ export default class Routes extends Component {
     return (
       <Router>
         <Header />
-        <TwilioChat socket={socket} />
+        <Route
+          path="/"
+          render={(props) => <TwilioChat {...props} socket={socket} />}
+        />
         <Switch>
           <Route
             exact
