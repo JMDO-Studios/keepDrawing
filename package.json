@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node main",
-    "start-dev": "nodemon main -e html,js,css --ignore public",
+    "start-dev": "npm run build-watch & npm run start-server",
+    "start-server": "nodemon main -e html,js,css --ignore public",
+    "build-watch": "webpack -w --mode=\"development\"",
+    "build": "webpack --mode=\"production\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint client server"
   },
@@ -25,25 +28,38 @@
   },
   "homepage": "https://github.com/mxavier927/keepDrawing#readme",
   "dependencies": {
-    "aframe": "^1.0.4",
+    "@babylonjs/core": "^4.2.0",
+    "@babylonjs/gui": "^4.2.0",
+    "@babylonjs/loaders": "^4.2.0",
+    "axios": "^0.21.0",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "handtrackjs": "0.0.13",
-    "nodemon": "^2.0.6",
-    "pg": "^8.5.1",
-    "redux": "^4.0.5",
-    "sequelize": "^6.3.5",
+    "process": "^0.11.10",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "resemblejs": "^3.2.5",
+    "scale-number-range": "^1.0.3",
     "socket.io": "^3.0.3",
-    "socketio": "^1.0.0",
+    "socket.io-client": "^3.0.3",
     "twilio": "^3.52.0",
+    "twilio-video": "^2.8.0",
+    "util": "^0.12.3",
+    "uuid": "^8.3.1",
     "webpack": "^5.6.0",
     "webpack-cli": "^4.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.12.7",
+    "@babel/preset-react": "^7.12.7",
+    "babel-loader": "^8.2.1",
     "eslint": "^7.14.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.21.5",
-    "eslint-plugin-react-hooks": "^4.2.0"
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "nodemon": "^2.0.6"
   }
 }
