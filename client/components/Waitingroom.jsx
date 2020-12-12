@@ -12,10 +12,10 @@ class Waitingroom extends Component {
   }
 
   componentDidMount() {
-    const { socket } = this.props;
+    const { socket, handleStateChange } = this.props;
     socket.emit('change name', { name: socket.name });
     socket.on('goToGame', () => {
-      this.props.history.push('/imagegame');
+      handleStateChange('game');
     });
     socket.on('chat message', (msg) => {
       this.setState({

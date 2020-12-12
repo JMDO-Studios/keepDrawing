@@ -31,15 +31,15 @@ export default class Routes extends Component {
     };
     this.startVideo = this.startVideo.bind(this);
     this.startGame = this.startGame.bind(this);
-    this.handleStateChange = this.handleStateChange(this);
+    this.handleStateChange = this.handleStateChange.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { status } = this.state;
-    if (prevState.status !== status) {
-      console.log('status has changed');
-    }
-  }
+  // componentDidUpdate(prevProps, prevState) {
+  //   const { status } = this.state;
+  //   if (prevState.status !== status) {
+  //     console.log('status has changed');
+  //   }
+  // }
 
   handleStateChange(value) {
     // ev.preventDefault();
@@ -69,15 +69,16 @@ export default class Routes extends Component {
 
   render() {
     this.startGame();
-    let { status, isVideo, message } = this.state;
+    const { status, isVideo, message } = this.state;
+    const { handleStateChange } = this;
     if (status === 'lobby') {
       return (
-        <Lobby socket={socket} message={message} handleStateChange={this.handleStateChange} />
+        <Lobby socket={socket} message={message} handleStateChange={handleStateChange} />
       );
     }
     if (status === 'waiting room') {
       return (
-        <Waitingroom socket={socket} message={message} />
+        <Waitingroom socket={socket} message={message} handleStateChange={handleStateChange} />
       );
     }
     if (status === 'game') {
