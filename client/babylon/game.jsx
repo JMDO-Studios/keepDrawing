@@ -1,64 +1,64 @@
 import React from 'react';
-import '@babylonjs/core/Debug/debugLayer';
-import '@babylonjs/inspector';
 import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Rectangle, StackPanel, Control,
+  AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
-  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3,
+  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3, HighlightLayer,
 } from '@babylonjs/core';
 
 function createTextBox(initialText, parent) {
-  const text = new TextBlock('TextBlock', `${initialText}:`);
-  text.paddingLeft = '5px';
+  const canvasHeight = document.getElementById('gameCanvas').height;
+  const text = new TextBlock('TextBlock', `${initialText}`);
   text.color = 'gold';
-  const rect1 = new Rectangle();
-  rect1.width = 1;
-  rect1.height = '40px';
-  rect1.thickness = 0;
   text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-  parent.addControl(rect1);
-  rect1.addControl(text);
-
-  return rect1;
+  text.width = 1;
+  parent.addRowDefinition(canvasHeight / 2 / parent.rowCount, true);
+  for (let row = 0; row < parent.rowCount - 1; row += 1) {
+    parent.setRowDefinition(row, canvasHeight / 2 / parent.rowCount, true);
+  }
+  const row = parent.rowCount - 1;
+  parent.addControl(text, row, 0);
+  return [text, row];
 }
 
-function addText(initialText, textBox) {
+function addText(initialText, parent) {
   const text = new TextBlock('TextBlock', initialText);
   text.color = 'gold';
-  text.paddingRight = '5px';
   text.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  textBox.addControl(text);
+  text.width = 1;
+  const row = parent.rowCount - 1;
+  parent.addControl(text, row, 1);
   return text;
 }
 
 function createGUI() {
-  const stackPanel = new StackPanel();
-  stackPanel.width = 0.2;
-  stackPanel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-  stackPanel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  const grid = new Grid();
+  grid.width = 0.2;
+  grid.addColumnDefinition(0.8, false);
+  grid.addColumnDefinition(0.3, false);
+  grid.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  grid.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  advancedTexture.addControl(stackPanel);
+  advancedTexture.addControl(grid);
 
-  // create timer
-  const teamMateBox = createTextBox('Your teammate is', stackPanel);
-  const timeBox = createTextBox('Time Left', stackPanel);
-  const countBox = createTextBox('Images submitted', stackPanel);
+  // create grid elements
+  createTextBox('Your teammate is', grid);
+  const teamMateName = addText('0', grid);
 
-  const timer = addText('Get Ready!', timeBox);
-  const clueCount = addText('0', countBox);
-  const teamMateName = addText('', teamMateBox);
+  createTextBox('Time Left', grid);
+  const timer = addText('Get Ready!', grid);
 
   return {
-    stackPanel, timer, clueCount, teamMateName,
+    grid, timer, teamMateName,
   };
 }
 
 function createScoreDisplay(teamNames, parent) {
-  const scoreBox = createTextBox(teamNames, parent);
-  const score = addText('0', scoreBox);
+  createTextBox(teamNames, parent);
+  const score = addText('0', parent);
   return score;
 }
 
@@ -94,7 +94,7 @@ function createGround(scene) {
 }
 
 function initalizeCamera(canvas, scene) {
-  const camera = new FreeCamera('FreeCamera', new Vector3(0, 1, 0), scene);
+  const camera = new FreeCamera('FreeCamera', new Vector3(0, 1.3, 0), scene);
   camera.ellipsoid = new Vector3(1, 1, 1);
   camera.applyGravity = true;
   camera.checkCollisions = true;
@@ -116,14 +116,14 @@ function createTeammate(scene) {
   return sphere;
 }
 
-function createImagePlane(type, sphere, scene) {
+function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
   const mesh = MeshBuilder.CreatePlane(type,
     { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 : sphere.position.x - meshWidth / 2,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.1 : sphere.position.x - meshWidth / 2 - 0.1,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -131,39 +131,42 @@ function createImagePlane(type, sphere, scene) {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
   } else {
+    mesh.rotation.y = Math.PI; // rotate the mesh so that the back is showing to the player and video mirrors horizontally
     const video = document.getElementById('myVideo');
-    material.emissiveTexture = new VideoTexture('video', video, scene, false, false);
-
-    // theoretically we can mix and match textures, levels, and colors until we find the brightness we like.
-    // this is going to take trial and error
-    material.emissiveTexture.level = 0.5;
-    // material.diffuseColor = new Color3(1, 1, 1);
-    // material.specularColor = new Color3(0, 0, 0);
+    const webcamTexture = new VideoTexture('video', video, scene, false, false);
+    material.emissiveTexture = webcamTexture;
+    material.diffuseTexture = webcamTexture; // same texture must be assigned to both emissive and diffuse, diffuse only is too dark and emissive only is too bright and washed out
   }
+
+  highlightLayer.addMesh(mesh, Color3.Red());
   mesh.material = material;
   return mesh;
 }
 
-function createButton(type, sphere, scene, socket) {
+function createButtonPlane(type, parent, scene) {
   const mesh = MeshBuilder.CreatePlane(type,
-    { size: 0.5, sideOrientation: Mesh.DOUBLESIDE },
+    { width: 0.5, height: 0.1, sideOrientation: Mesh.DOUBLESIDE },
     scene);
   mesh.position = new Vector3(
-    sphere.position.x - 0.5,
-    sphere.position.y,
-    sphere.position.z,
+    parent.position.x,
+    parent.position.y - 0.5,
+    parent.position.z,
   );
+  return mesh;
+}
+
+function createButton(mesh, instance, socket, scene) {
   const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-  const button1 = Button.CreateSimpleButton('but1', 'Click Me', scene);
-  button1.width = 1;
-  button1.height = 0.4;
-  button1.color = 'white';
-  button1.fontSize = 50;
-  button1.background = 'green';
-  button1.onPointerUpObservable.add(() => {
-    socket.emit('test submit', { gameRoom: socket.gameName, teamRoom: socket.teamName });
+  const button = Button.CreateSimpleButton('but1', 'Submit', scene);
+  // button.width = 1;
+  button.height = 1;
+  button.color = 'white';
+  button.fontSize = 50;
+  button.background = 'green';
+  button.onPointerUpObservable.add(() => {
+    socket.emit('submitDrawing', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
   });
-  advancedTexture.addControl(button1);
+  advancedTexture.addControl(button);
 }
 
 function redrawTexture(mesh, newURL) {
@@ -187,7 +190,9 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { socket: props.socket };
+    this.state = {
+      socket: props.socket,
+    };
   }
 
   componentDidMount() {
@@ -203,6 +208,8 @@ export default class Game extends React.Component {
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
+    this.highlightLayer = new HighlightLayer("hl1", scene);
+
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
 
@@ -212,10 +219,8 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
-    this.drawingMesh = createImagePlane('drawing', teammate, scene);
+    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
     const { drawingMesh } = this;
-    this.submitButton = createButton('submit', teammate, scene, socket);
-    const { submitButton } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -237,20 +242,11 @@ export default class Game extends React.Component {
         default:
           break; // do not block other keys
       }
-      // hide/show the Inspector
-      // Shift+Ctrl+Alt+I
-      if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
-        if (scene.debugLayer.isVisible()) {
-          scene.debugLayer.hide();
-        } else {
-          scene.debugLayer.show();
-        }
-      }
     });
 
     // create GUI
     const {
-      stackPanel, timer, clueCount, teamMateName,
+      grid, timer, teamMateName,
     } = createGUI();
 
     const scores = {};
@@ -258,7 +254,7 @@ export default class Game extends React.Component {
     /// register socket events /////////////
 
     socket.on('initialize', ({
-      teamName, gameName, members, drawer, clueGiver, teams,
+      teamName, gameName, members, drawer, teams,
     }) => {
       socket.teamName = teamName;
       socket.gameName = gameName;
@@ -269,29 +265,35 @@ export default class Game extends React.Component {
 
       // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
       if (socket.role === 'drawer') {
-        this.clueMesh = createImagePlane('hand', teammate, scene);
+        this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
-        this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
-      initializeScores('Your Score', scores, teamName, stackPanel);
+      console.log('grid is', grid);
+      initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
-      Object.keys(teams).forEach((team) => {
+      Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
-          const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          initializeScores(label, scores, team, stackPanel);
+          // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
+          const label = `Team ${idx}`;
+          initializeScores(label, scores, team, grid);
         }
       });
     });
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      if (drawingURL !== this.lastReceivedDrawingURL) {
-        redrawTexture(drawingMesh, drawingURL);
-      }
+      redrawTexture(drawingMesh, drawingURL);
+      this.lastReceivedDrawingURL = drawingURL;
     });
+
+    // share resemblejs results with team
+    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {
@@ -302,16 +304,19 @@ export default class Game extends React.Component {
     socket.on('new clue', ({ clueURL }) => {
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
+        this.buttonMesh.dispose(true, true);
         this.clueMesh.dispose(true, true);
-        this.clueMesh = createImagePlane('hand', teammate, scene);
+        this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
         socket.role = 'clueGiver';
         // delete mesh, replace it with appropriate version, add observable
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
-        this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
+        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
+        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
     });
 
@@ -321,7 +326,7 @@ export default class Game extends React.Component {
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
 
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
@@ -334,7 +339,6 @@ export default class Game extends React.Component {
         } else timer.text = 'BOOM!';
       });
     });
-
     engine.runRenderLoop(() => {
       scene.render();
     });

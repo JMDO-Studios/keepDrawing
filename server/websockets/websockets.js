@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const scale = require('scale-number-range');
 const { v4: uuidv4 } = require('uuid');
 const {
   express,
@@ -7,19 +8,21 @@ const {
   http,
   io,
 } = require('../serverbuild');
-// const { getDiffTestSocket } = require('../imageCompare/getDiff');
+const { getDiff } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
   return io.sockets.adapter.rooms.get(roomName);
 }
 
-function generateURLArray(directoryPath) {
+function generateURLArray(directoryPath, emptyCanvasURL) {
   const urls = [];
   const fileNames = fs.readdirSync(directoryPath);
   fileNames.forEach((file) => {
     const bitmap = fs.readFileSync(path.join(directoryPath, file), { encoding: 'base64' });
-    urls.push(`data:image/png;base64,${bitmap}`);
+    const data = { data: `data:image/png;base64,${bitmap}` };
+    data.differenceFromBlank = parseFloat(getDiff(emptyCanvasURL, data.data).misMatchPercentage);
+    urls.push(data);
   });
   return urls;
 }
@@ -30,7 +33,8 @@ function generateRandomURL(urlArray) {
 }
 
 const clueDirectoryPath = path.join(__dirname, '../assets/clues');
-const clueURLs = generateURLArray(clueDirectoryPath);
+const emptyCanvasURL = 'data:image/png;base64,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';
+const clueURLs = generateURLArray(clueDirectoryPath, emptyCanvasURL);
 const activeGames = {};
 
 function createActiveGameObject(gameName, lobbyRoster) {
@@ -113,6 +117,7 @@ function joinLobby(socket) {
     io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
 }
+
 async function websocketLogic(socket) {
   socket.on('disconnect', () => {
     console.log('a user disconnected');
@@ -126,21 +131,21 @@ async function websocketLogic(socket) {
     io.to('lobby').emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
-    // commented out resemblejs test to speed up communication.
-    //  will need to be added back in on drawing submission
-    // Promise.resolve(getDiffTestSocket(imageData.data,
-    // './public/testAssets/rightblack.jpg')).then((percent) => {
-    //   socket.to(socket.teamRoom).emit('imageClicked',
-    //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
-
-  socket.on('test submit', ({gameRoom, teamRoom}) => {
-    const clueURL = generateRandomURL(clueURLs);
+  socket.on('submitDrawing', ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
-    teamState.points += 5;
-    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
-    io.to(teamRoom).emit('new clue', { clueURL });
+    const currentClue = teamState.currentClueURL;
+    const difference = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);
+    const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 100, 0, 100);
+    console.log('scaled difference', scaledDifference);
+    const clueURL = generateRandomURL(clueURLs);
+    teamState.currentClueURL = clueURL;
+    if (scaledDifference > 0) {
+      teamState.points += Math.round(scaledDifference);
+      io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
+    }
+    io.to(teamRoom).emit('new clue', { clueURL: clueURL.data });
   });
 }
 
