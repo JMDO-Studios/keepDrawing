@@ -1,3 +1,5 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
 import React from 'react';
 import '@babylonjs/loaders/glTF';
 import {
@@ -275,7 +277,7 @@ export default class Game extends React.Component {
         this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
-      console.log('grid is', grid);
+      // console.log('grid is', grid);
       initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
@@ -340,11 +342,29 @@ export default class Game extends React.Component {
           count -= (thisScene.deltaTime / 1000);
           timer.text = String(Math.round(count));
         } else {
+          let result = 'You Won!';
           timer.text = 'BOOM!';
-          console.log(scores);
+          // console.log(scores);
+          console.log(scores[socket.teamName].score);
+          // compare points from details against scores object to determine who won
+          for (const team in scores) {
+            const currTeam = scores[team];
+            if (currTeam.score > scores[socket.teamName].score) {
+              result = 'You Lost';
+              // console.log(currTeam.score);
+              // console.log(scores[socket.teamName].score);
+              // console.log(currTeam.score);
+              // console.log(points); //this is always 0...
+              break;
+            }
+            if (currTeam.score === scores[socket.teamName].score && currTeam.names !== 'Your Score') {
+              result = 'You Tied';
+            }
+          }
+          // replace clue mesh to dsiplay game results
           const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
           const text1 = new TextBlock('hi text');
-          text1.text = 'Game Results:';
+          text1.text = `${result}`;
           text1.width = 1;
           text1.height = 1;
           text1.color = 'black';
@@ -354,8 +374,9 @@ export default class Game extends React.Component {
           text1.textWrapping = true;
           gameResultsTexture.addControl(text1);
 
+          // replace drawingMesh with button
           const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
-
+          // create button for return to waiting room
           const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
           button1.width = '225px';
           button1.height = '75px';
@@ -363,7 +384,6 @@ export default class Game extends React.Component {
           button1.cornerRadius = 20;
           button1.background = 'grey';
           button1.onPointerUpObservable.add(() => {
-            console.log('button clicked');
             socket.emit('leavingGame');
             handleStatusChange('waiting room');
             // delete game? socket.emit and then socket.on
