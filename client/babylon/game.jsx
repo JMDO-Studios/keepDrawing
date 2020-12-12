@@ -327,6 +327,7 @@ export default class Game extends React.Component {
       const { time } = gameState;
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
+      const { handleStatusChange } = this.props;
 
       if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
 
@@ -364,10 +365,7 @@ export default class Game extends React.Component {
           button1.onPointerUpObservable.add(() => {
             console.log('button clicked');
             socket.emit('leavingGame');
-            // change state to render the correct page
-            // this.setState({});
-            //  or push to history to change page
-            // this.props.history.push('/waitingroom');
+            handleStatusChange('waiting room');
             // delete game? socket.emit and then socket.on
             // for delete game make sure to delete game for all parties?
           });

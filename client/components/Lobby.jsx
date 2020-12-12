@@ -10,10 +10,10 @@ class Lobby extends Component {
   }
 
   save(ev) {
-    const { socket, handleStatusChange } = this.props;
+    const { socket, handleStatusChange, isVideo } = this.props;
+    const { player } = this.state;
     ev.preventDefault();
-    if (this.state.player.name && this.props.isVideo) {
-      const { player } = this.state;
+    if (player.name && isVideo) {
       socket.name = player.name;
       handleStatusChange('waiting room');
     }
