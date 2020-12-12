@@ -62,7 +62,7 @@ export default class Routes extends Component {
     const { handleStatusChange } = this;
     if (status === 'lobby') {
       return (
-        <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} />
+        <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
       );
     }
     if (status === 'waiting room') {
