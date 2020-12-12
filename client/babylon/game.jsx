@@ -100,7 +100,7 @@ function createGround(scene) {
 
 function initalizeCamera(canvas, scene) {
   const camera = new FreeCamera('FreeCamera', new Vector3(0, 1, 0), scene);
-  camera.ellipsoid = new Vector3(1, 2, 1);
+  camera.ellipsoid = new Vector3(1, 1, 1);
   camera.applyGravity = true;
   camera.checkCollisions = true;
   camera.cameraAcceleration = 0.005;
