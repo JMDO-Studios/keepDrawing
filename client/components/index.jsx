@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router, Route, Switch,
 } from 'react-router-dom';
 import io from 'socket.io-client';
+import TwilioChat from '../twilio/index';
 import DrawingGame from './DrawingGame';
 import Header from './Header';
 import Lobby from './Lobby';
@@ -16,6 +17,7 @@ export default class Routes extends Component {
     return (
       <Router>
         <Header />
+        <TwilioChat socket={socket} />
         <Switch>
           <Route
             exact

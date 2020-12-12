@@ -11,17 +11,28 @@ export default class TwilioChat extends Component {
     this.joinTeam = this.joinTeam.bind(this);
   }
 
-  joinTeam() {
+  async joinTeam() {
+    const { socket } = this.state;
+    const { name, teamName } = socket;
     const playerDetails = {
-      identity: socket.name,
-      room: socket.teamName,
+      identity: name,
+      room: teamName,
     };
     const { data } = await axios.post('twilio/token', playerDetails);
+    this.setState({
+      token: data,
+    });
   }
 
   render() {
+    const { socket, token } = this.state;
+    const { name, teamName } = socket;
     return (
-      <div />
-    )
+      <div>
+        <div>Your Name: {name}</div>
+        <div>Your Team: {teamName}</div>
+        <div>Your Token: {token}</div>
+      </div>
+    );
   }
 }
