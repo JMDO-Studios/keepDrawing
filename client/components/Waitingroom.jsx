@@ -12,10 +12,10 @@ class Waitingroom extends Component {
   }
 
   componentDidMount() {
-    const { socket } = this.props;
+    const { socket, handleStatusChange } = this.props;
     socket.emit('change name', { name: socket.name });
     socket.on('goToGame', () => {
-      this.props.history.push('/imagegame');
+      handleStatusChange('game');
     });
     socket.on('chat message', (msg) => {
       this.setState({
@@ -45,24 +45,27 @@ class Waitingroom extends Component {
     const { editMessage, sendMessage } = this;
 
     return (
-      <div id="wait">
-        <ul id="messages">
-          {messages.map((m, i) => <li key={i}>{m}</li>)}
-        </ul>
-        <form id="form">
-          <input
-            className="wait-input"
-            id="m"
-            value={message}
-            onChange={editMessage}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                sendMessage(e);
-              }
-            }}
-          />
-        </form>
-        <div>Press Enter</div>
+      <div>
+        <h1>Waiting Room</h1>
+        <div id="wait">
+          <ul id="messages">
+            {messages.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+          <form id="form">
+            <input
+              className="wait-input"
+              id="m"
+              value={message}
+              onChange={editMessage}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  sendMessage(e);
+                }
+              }}
+            />
+          </form>
+          <div>Press Enter</div>
+        </div>
       </div>
     );
   }
