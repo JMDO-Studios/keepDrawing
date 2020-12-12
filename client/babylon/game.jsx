@@ -70,12 +70,14 @@ function createScoreDisplay(teamNames, parent) {
 function initializeScores(labelText, scores, teamName, parent) {
   scores[teamName] = { score: 0, names: labelText };
   scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
+  //emit something to send the other team our score?
 }
 
 function updateScore(teamName, newScore, scores) {
   const teamScore = scores[teamName];
   teamScore.score = newScore;
   teamScore.scoreDisplay.text = `${newScore}`;
+  //emit something to send the other team out score?
 }
 
 function initializeScene(canvas) {
@@ -337,7 +339,7 @@ export default class Game extends React.Component {
 
       if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL);
 
-      let count = 10;
+      let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
 
@@ -347,6 +349,7 @@ export default class Game extends React.Component {
           timer.text = String(Math.round(count));
         } else {
           timer.text = 'BOOM!';
+          console.log(scores);
           const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
           const text1 = new TextBlock('hi text');
           text1.text = 'Game Results:';
