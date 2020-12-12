@@ -247,6 +247,7 @@ export default class Game extends React.Component {
         default:
           break; // do not block other keys
       }
+    });
 
     // create GUI
     const {
