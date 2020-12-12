@@ -52,7 +52,7 @@ export default class DrawingGame extends Component {
           const hand = predictions[0].bbox;
           const midValX = hand[0] + (hand[2] / 2);
           const midValY = hand[1] + (hand[3] / 2);
-          if (draw) drawingContext.fillRect(midValX, midValY, 10, 10);
+          if (draw) drawingContext.fillRect(midValX, midValY, 20, 20);
           if (erase) drawingContext.clearRect(midValX, midValY, 10, 10);
         }
         if (isVideo) {

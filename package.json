@@ -48,6 +48,7 @@
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "resemblejs": "^3.2.5",
+    "scale-number-range": "^1.0.3",
     "sequelize": "^6.3.5",
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.3",
