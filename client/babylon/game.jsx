@@ -7,7 +7,7 @@ import {
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
-  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3,
+  StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3, HighlightLayer,
 } from '@babylonjs/core';
 
 function createTextBox(initialText, parent) {
@@ -100,7 +100,7 @@ function createGround(scene) {
 
 function initalizeCamera(canvas, scene) {
   const camera = new FreeCamera('FreeCamera', new Vector3(0, 1, 0), scene);
-  camera.ellipsoid = new Vector3(1, 1, 1);
+  camera.ellipsoid = new Vector3(1, 2, 1);
   camera.applyGravity = true;
   camera.checkCollisions = true;
   camera.cameraAcceleration = 0.005;
@@ -121,14 +121,14 @@ function createTeammate(scene) {
   return sphere;
 }
 
-function createImagePlane(type, sphere, scene) {
+function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
   const mesh = MeshBuilder.CreatePlane(type,
     { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 : sphere.position.x - meshWidth / 2,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.1 : sphere.position.x - meshWidth / 2 - 0.1,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -142,6 +142,10 @@ function createImagePlane(type, sphere, scene) {
     material.emissiveTexture = webcamTexture;
     material.diffuseTexture = webcamTexture; // same texture must be assigned to both emissive and diffuse, diffuse only is too dark and emissive only is too bright and washed out
   }
+  // mesh.outlineColor = Color3.Red();
+  // mesh.outlineWidth = 0.1;
+  // mesh.renderOutline = true;
+  highlightLayer.addMesh(mesh, Color3.Red());
   mesh.material = material;
   return mesh;
 }
@@ -152,7 +156,7 @@ function createButtonPlane(type, parent, scene) {
     scene);
   mesh.position = new Vector3(
     parent.position.x,
-    parent.position.y - 0.3,
+    parent.position.y - 0.4,
     parent.position.z,
   );
   return mesh;
@@ -211,6 +215,8 @@ export default class Game extends React.Component {
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
+    this.highlightLayer = new HighlightLayer("hl1", scene);
+
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
 
@@ -220,7 +226,7 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
-    this.drawingMesh = createImagePlane('drawing', teammate, scene);
+    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
     const { drawingMesh } = this;
 
     // initialize plane texture URLs
@@ -275,10 +281,10 @@ export default class Game extends React.Component {
 
       // send the handtrack canvas to teammate every frame. in the future this should be optimized to emit on canvas change instead of every frame
       if (socket.role === 'drawer') {
-        this.clueMesh = createImagePlane('hand', teammate, scene);
+        this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
-        this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
         this.submitButton = createButton(this.buttonMesh, this, socket, scene);
       }
@@ -315,14 +321,14 @@ export default class Game extends React.Component {
         socket.role = 'drawer';
         this.buttonMesh.dispose(true, true);
         this.clueMesh.dispose(true, true);
-        this.clueMesh = createImagePlane('hand', teammate, scene);
+        this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
       } else {
         socket.role = 'clueGiver';
         // delete mesh, replace it with appropriate version, add observable
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
-        this.clueMesh = createImagePlane('clue', teammate, scene);
+        this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
         this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
         this.submitButton = createButton(this.buttonMesh, this, socket, scene);

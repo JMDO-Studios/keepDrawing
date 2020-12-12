@@ -136,21 +136,15 @@ async function websocketLogic(socket) {
   socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
     const currentClue = teamState.currentClueURL;
-    // const difference = parseFloat(getDiffFast(drawing, currentClue.differenceFromBlank, currentClue.data).misMatchPercentage);
-    const differenceFromClue = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);
-    const differenceFromBlank = parseFloat(getDiff(drawing, emptyCanvasURL).misMatchPercentage);
-    console.log('difference from clue', differenceFromClue);
-    console.log('difference from blank', differenceFromBlank);
-    console.log('difference of difference', differenceFromBlank - differenceFromClue);
-    // const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 5, 0, 100);
-    // console.log('scaled difference', scaledDifference);
+    const difference = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);
+    const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 100, 0, 100);
+    console.log('scaled difference', scaledDifference);
     const clueURL = generateRandomURL(clueURLs);
     this.currentClueURL = clueURL;
-    // if (scaledDifference > 0) {
-      // teamState.points += Math.round(scaledDifference);
-      teamState.points += 5;
+    if (scaledDifference > 0) {
+      teamState.points += Math.round(scaledDifference);
       io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
-    // }
+    }
     io.to(teamRoom).emit('new clue', { clueURL: clueURL.data });
   });
 }
