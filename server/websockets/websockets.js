@@ -7,7 +7,7 @@ const {
   http,
   io,
 } = require('../serverbuild');
-// const { getDiffTestSocket } = require('../imageCompare/getDiff');
+const { getDiff } = require('../imageCompare/getDiff');
 const { bombGameSettings } = require('../../gameSettings');
 
 function getIdsOfSocketsInRoom(roomName) {
@@ -34,15 +34,18 @@ const clueURLs = generateURLArray(clueDirectoryPath);
 const activeGames = {};
 
 function createActiveGameObject(gameName, lobbyRoster) {
-  activeGames[gameName] = { time: bombGameSettings.startClockinSec };
+  activeGames[gameName] = {
+    time: bombGameSettings.startClockinSec,
+    teams: {},
+  };
   const game = activeGames[gameName];
 
   const rosterIterator = lobbyRoster.values();
 
   // loop to create the teams
-  for (let teamNum = 0; teamNum < lobbyRoster.size / bombGameSettings.teamSize; teamNum += 1) {
+  for (let teamNum = 0; teamNum <= lobbyRoster.size / bombGameSettings.teamSize; teamNum += 1) {
     const teamName = uuidv4();
-    game[teamName] = {
+    game.teams[teamName] = {
       members: [],
       drawer: null,
       clueGiver: null,
@@ -52,15 +55,16 @@ function createActiveGameObject(gameName, lobbyRoster) {
     };
 
     for (let member = 0; member < bombGameSettings.teamSize; member += 1) {
-      const socketId = rosterIterator.next();
-      const { value } = socketId;
+      const { value } = rosterIterator.next();
       const socket = io.of('/').sockets.get(value);
-      game[teamName].members.push(socket.id);
+      const team = game.teams[teamName];
+      const { id, name } = socket;
+      team.members.push({ id, name });
       if (member === 0) {
-        game[teamName].drawer = socket.id;
+        team.drawer = { id, name };
         socket.role = 'drawer';
       } else {
-        game[teamName].clueGiver = socket.id;
+        game.teams[teamName].clueGiver = { id, name };
         socket.role = 'clueGiver';
       }
       socket.gameRoom = gameName;
@@ -69,7 +73,8 @@ function createActiveGameObject(gameName, lobbyRoster) {
       try {
         socket.join(gameName);
         socket.join(teamName);
-        console.log(`Socket ${socket.id} is in team ${teamName} in game ${gameName}`);
+        io.to(id).emit('goToGame');
+        console.log(`Socket ${id} is in team ${teamName} in game ${gameName}`);
         socket.leave('lobby');
       } catch (error) {
         console.log(error);
@@ -83,45 +88,60 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-async function websocketLogic(socket) {
+function joinLobby(socket) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     const gameRoomName = uuidv4();
     createActiveGameObject(gameRoomName, lobbyRoster);
+    socket.leave('lobby');
 
-    Object.keys(activeGames[gameRoomName]).forEach((teamName) => {
+    Object.keys(activeGames[gameRoomName].teams).forEach((teamName) => {
+      const allTeams = activeGames[gameRoomName].teams;
+      const team = allTeams[teamName];
       io.to(teamName).emit('initialize', {
         teamName,
         gameName: gameRoomName,
-        drawer: activeGames[gameRoomName][teamName].drawer,
-        clueGiver: activeGames[gameRoomName][teamName].clueGiver,
+        members: team.members,
+        drawer: team.drawer,
+        clueGiver: team.clueGiver,
+        teams: allTeams,
       });
     });
 
     io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
   }
+}
 
+async function websocketLogic(socket) {
   socket.on('disconnect', () => {
     console.log('a user disconnected');
     socket.leave('lobby');
   });
+  socket.on('change name', ({ name }) => {
+    socket.name = name;
+    joinLobby(socket);
+  });
   socket.on('chat message', (message) => {
-    io.emit('chat message', message);
+    io.to('lobby').emit('chat message', message);
   });
   socket.on('drawingChanged', (payLoad) => {
-    // commented out resemblejs test to speed up communication.
-    //  will need to be added back in on drawing submission
-    // Promise.resolve(getDiffTestSocket(imageData.data,
-    // './public/testAssets/rightblack.jpg')).then((percent) => {
-    //   socket.to(socket.teamRoom).emit('imageClicked',
-    //  { data: imageData.data, percent: 100 - percent.misMatchPercentage });
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
   socket.on('leavingGame', () => {
     socket.leave(socket.gameRoom);
     socket.leave(socket.teamRoom);
+  });
+  socket.on('submitDrawing', async ({ gameRoom, teamRoom, drawing }) => {
+    const teamState = activeGames[gameRoom].teams[teamRoom];
+    const difference = getDiff(drawing, teamState.currentClueURL);
+    io.to(socket.teamRoom).emit('comparisonResults',
+      { percent: 100 - difference.misMatchPercentage });
+    const clueURL = generateRandomURL(clueURLs);
+    teamState.points += 5;
+    io.to(gameRoom).emit('update score', { teamName: teamRoom, score: teamState.points });
+    io.to(teamRoom).emit('new clue', { clueURL });
   });
 }
 

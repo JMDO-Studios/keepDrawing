@@ -5,7 +5,7 @@ class Waitingroom extends Component {
     super(props);
     this.state = {
       message: '',
-      messages: ['welcome'],
+      messages: [`welcome ${this.props.socket.name}`],
     };
     this.editMessage = this.editMessage.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
@@ -13,6 +13,10 @@ class Waitingroom extends Component {
 
   componentDidMount() {
     const { socket } = this.props;
+    socket.emit('change name', { name: socket.name });
+    socket.on('goToGame', () => {
+      this.props.history.push('/imagegame');
+    });
     socket.on('chat message', (msg) => {
       this.setState({
         message: msg,
