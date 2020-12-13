@@ -204,7 +204,7 @@ function createDrawingControlPanel(parent, guiManager, controls) {
   panel.linkToTransformNode(parent);
   panel.position.y += heightRatio / 4;
   // panel.position.x += 0.7;
-  panel.position.x += -0.5;
+  panel.position.x += -0.65;
   panel.scaling.y = heightRatio;
   populateControlButtons(panel, controls);
 
