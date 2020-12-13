@@ -7,6 +7,16 @@ import {
   StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3, HighlightLayer,
 } from '@babylonjs/core';
 
+function openFullscreen(elem) {
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+  }
+}
+
 function createTextBox(initialText, parent) {
   const canvasHeight = document.getElementById('gameCanvas').height;
   const text = new TextBlock('TextBlock', `${initialText}`);
@@ -261,6 +271,8 @@ export default class Game extends React.Component {
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
+
+    openFullscreen (canvas);
 
     // create babylon engine, build and customize scene
     [this.engine, this.scene] = initializeScene(canvas);
