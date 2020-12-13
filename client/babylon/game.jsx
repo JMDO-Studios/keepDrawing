@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, Button3D, HolographicButton,
+  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,

@@ -1,40 +1,80 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router, Route, Switch,
-} from 'react-router-dom';
 import io from 'socket.io-client';
+import * as handTrack from 'handtrackjs';
 import DrawingGame from './DrawingGame';
-import Header from './Header';
 import Lobby from './Lobby';
-import Footer from './Footer';
 import Waitingroom from './Waitingroom';
 
 const socket = io();
+socket.name = '';
+
+const modelParams = {
+  flipHorizontal: true,
+  imageScaleFactor: 1.0,
+  maxNumBoxes: 1,
+  iouThreshold: 0.5,
+  scoreThreshold: 0.70,
+};
+
+let model = null;
+const video = document.getElementById('myVideo');
 
 export default class Routes extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isVideo: false,
+      message: 'Please Wait. Video Starting...',
+      status: 'lobby',
+    };
+    this.startVideo = this.startVideo.bind(this);
+    this.startGame = this.startGame.bind(this);
+    this.handleStatusChange = this.handleStatusChange.bind(this);
+  }
+
+  handleStatusChange(status) {
+    this.setState({ status });
+  }
+
+  startVideo() {
+    handTrack.startVideo(video)
+      .then((status) => {
+        if (status) {
+          this.setState({ isVideo: true, message: 'Create Username and Press Submit to Join Waiting Room' });
+        } else {
+          this.setState({ message: 'Please enable your video' });
+        }
+      });
+  }
+
+  startGame() {
+    const { startVideo } = this;
+    handTrack.load(modelParams)
+      .then((lmodel) => {
+        model = lmodel;
+        startVideo();
+      });
+  }
+
   render() {
-    return (
-      <Router>
-        <Header />
-        <Switch>
-          <Route
-            exact
-            path="/"
-            render={(props) => <Lobby {...props} socket={socket} />}
-          />
-          <Route
-            exact
-            path="/waitingroom"
-            render={(props) => <Waitingroom {...props} socket={socket} />}
-          />
-          <Route
-            exact
-            path="/imagegame"
-            render={(props) => <DrawingGame {...props} socket={socket} />}
-          />
-        </Switch>
-        <Footer />
-      </Router>
-    );
+    this.startGame();
+    const { status, isVideo, message } = this.state;
+    const { handleStatusChange } = this;
+    if (status === 'lobby') {
+      return (
+        <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
+      );
+    }
+    if (status === 'waiting room') {
+      return (
+        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+      );
+    }
+    if (status === 'game') {
+      return (
+        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} />
+      );
+    }
+    return null;
   }
 }
