@@ -344,17 +344,13 @@ export default class Game extends React.Component {
         } else {
           let result = 'You Won!';
           timer.text = 'BOOM!';
-          // console.log(scores);
           console.log(scores[socket.teamName].score);
           // compare points from details against scores object to determine who won
           for (const team in scores) {
             const currTeam = scores[team];
+            // clue giver mesh for game results is upside down or reversed
             if (currTeam.score > scores[socket.teamName].score) {
               result = 'You Lost';
-              // console.log(currTeam.score);
-              // console.log(scores[socket.teamName].score);
-              // console.log(currTeam.score);
-              // console.log(points); //this is always 0...
               break;
             }
             if (currTeam.score === scores[socket.teamName].score && currTeam.names !== 'Your Score') {
