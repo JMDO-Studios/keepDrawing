@@ -115,7 +115,7 @@ function createTeammate(scene) {
   return sphere;
 }
 
-function createImagePlane(type, sphere, scene, highlightLayer, guiManager = null, instance = null) {
+function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
@@ -129,10 +129,6 @@ function createImagePlane(type, sphere, scene, highlightLayer, guiManager = null
   if (type === 'clue' || type === 'drawing') {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
-    if (type === 'drawing') {
-      const { drawingFunctions } = instance;
-      instance.drawingPanel = createDrawingControlPanel(mesh, guiManager, drawingFunctions);
-    }
   } else {
     mesh.rotation.y = Math.PI; // rotate the mesh so that the back is showing to the player and video mirrors horizontally
     const video = document.getElementById('myVideo');
@@ -177,16 +173,18 @@ function makeControlButton(parent, control) {
   buttonText.color = 'white';
   buttonText.fontSize = 12;
   buttonText.fontWeight = 'bold';
+  buttonText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
 
   const button = new HolographicButton('drawingControl');
   parent.addControl(button);
   button.onPointerUpObservable.add(control.click);
   button.content = buttonText;
-  const [xScale, yScale] = [0.25, 0.1];
+  const [xScale, yScale] = [0.2, 0.1];
   button.scaling.x = xScale;
   button.mesh.getChildren()[1].scaling.x = 1 / xScale;
   button.scaling.y = yScale;
   button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.scaling.z = 0.5;
   button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
 
   return button;
@@ -204,9 +202,8 @@ function createDrawingControlPanel(parent, guiManager, controls) {
   panel.margin = 0.02;
   guiManager.addControl(panel);
   panel.linkToTransformNode(parent);
-  panel.position.y += heightRatio / 4;
-  panel.position.x += 0.5;
-  panel.position.z += -0.15;
+  panel.position.y += heightRatio / 3.5;
+  panel.position.x += 0.7;
   panel.scaling.y = heightRatio;
   populateControlButtons(panel, controls);
 
@@ -237,22 +234,23 @@ export default class Game extends React.Component {
     this.state = {
       socket: props.socket,
     };
-    this.drawingFunctions = [{
-      label: 'Start',
-      click: () => props.handleButton(true, false),
-    },
-    {
-      label: 'Stop',
-      click: () => props.handleButton(false, false),
-    },
-    {
-      label: 'Erase',
-      click: () => props.handleButton(false, true),
-    },
-    {
-      label: 'Clear',
-      click: () => props.clearCanvas(),
-    },
+    this.drawingFunctions = [
+      {
+        label: 'Clear',
+        click: () => props.clearCanvas(),
+      },
+      {
+        label: 'Erase',
+        click: () => props.handleButton(false, true),
+      },
+      {
+        label: 'Stop',
+        click: () => props.handleButton(false, false),
+      },
+      {
+        label: 'Start',
+        click: () => props.handleButton(true, false),
+      },
     ];
   }
 
@@ -283,7 +281,7 @@ export default class Game extends React.Component {
     this.teammate = createTeammate(scene);
     const { teammate } = this;
 
-    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer, this.buttonManager, this);
+    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
     const { drawingMesh } = this;
 
     // initialize plane texture URLs
@@ -331,10 +329,11 @@ export default class Game extends React.Component {
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createSubmitButton(this.buttonMesh, this, socket, scene);
+        this.submitButtonMesh = createButtonPlane('submit', drawingMesh, scene);
+        createSubmitButton(this.submitButtonMesh, this, socket, scene);
       }
       // create your team first so that it always shows up first in list
       console.log('grid is', grid);
@@ -368,10 +367,11 @@ export default class Game extends React.Component {
     socket.on('new clue', ({ clueURL }) => {
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
-        this.buttonMesh.dispose(true, true);
+        this.submitButtonMesh.dispose(true, true);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         socket.role = 'clueGiver';
         // delete mesh, replace it with appropriate version, add observable
@@ -379,8 +379,9 @@ export default class Game extends React.Component {
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createSubmitButton(this.buttonMesh, this, socket, scene);
+        this.submitButtonMesh = createButtonPlane('submit', drawingMesh, scene);
+        createSubmitButton(this.submitButtonMesh, this, socket, scene);
+        this.drawingPanel.dispose();
       }
     });
 
