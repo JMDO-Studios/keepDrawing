@@ -30,10 +30,27 @@ export default class Routes extends Component {
     this.startVideo = this.startVideo.bind(this);
     this.startGame = this.startGame.bind(this);
     this.handleStatusChange = this.handleStatusChange.bind(this);
+    this.returnToWaitingRoom = this.returnToWaitingRoom.bind(this);
+  }
+
+  componentDidMount() {
+    socket.on('disconnect', () => {
+      window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
+      this.returnToWaitingRoom(true);
+    });
   }
 
   handleStatusChange(status) {
     this.setState({ status });
+  }
+
+  returnToWaitingRoom(reconnect) {
+    console.log('in function')
+    if (reconnect) socket.open();
+    else socket.emit('leave game');
+    console.log('old status',this.state.status)
+    this.handleStatusChange('waiting room');
+    console.log('new status', this.state.status)
   }
 
   startVideo() {
@@ -59,7 +76,7 @@ export default class Routes extends Component {
   render() {
     this.startGame();
     const { status, isVideo, message } = this.state;
-    const { handleStatusChange } = this;
+    const { handleStatusChange, returnToWaitingRoom } = this;
     if (status === 'lobby') {
       return (
         <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
@@ -72,7 +89,7 @@ export default class Routes extends Component {
     }
     if (status === 'game') {
       return (
-        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} />
+        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} returnToWaitingRoom={returnToWaitingRoom} />
       );
     }
     return null;

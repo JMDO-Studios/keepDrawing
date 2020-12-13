@@ -123,16 +123,25 @@ async function websocketLogic(socket) {
     console.log('a user disconnected', socket.id);
     socket.to(socket.teamRoom).emit('teammate disconnected');
   });
+
+  socket.on('leave game', () => {
+    socket.leave(socket.gameRoom);
+    socket.leave(socket.teamRoom);
+  });
+
   socket.on('change name', ({ name }) => {
     socket.name = name;
     joinLobby(socket);
   });
+
   socket.on('chat message', (message) => {
     io.to('lobby').emit('chat message', message);
   });
+
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+
   socket.on('submitDrawing', ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
     const currentClue = teamState.currentClueURL;

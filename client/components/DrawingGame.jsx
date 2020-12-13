@@ -47,7 +47,7 @@ export default class DrawingGame extends Component {
 
   render() {
     const { handleButton, runDetection } = this;
-    const { socket, handleStatusChange } = this.props;
+    const { socket, returnToWaitingRoom } = this.props;
     runDetection();
     return (
       <div>
@@ -55,7 +55,7 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
         <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
-        <ThreeDScene socket={socket} handleStatusChange={handleStatusChange} />
+        <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} />
       </div>
     );
   }
