@@ -355,7 +355,7 @@ export default class Game extends React.Component {
       Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
           // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          const label = `Team ${idx}`;
+          const label = `Team ${idx+1}`;
           initializeScores(label, scores, team, grid);
         }
       });
