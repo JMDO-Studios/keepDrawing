@@ -31,6 +31,7 @@ export default class DrawingGame extends Component {
     this.runDetection = this.runDetection.bind(this);
     this.startGame = this.startGame.bind(this);
     this.handleButton = this.handleButton.bind(this);
+    this.clearCanvas = this.clearCanvas.bind(this);
   }
 
   handleButton(drawStatus, eraseStatus) {
@@ -38,6 +39,10 @@ export default class DrawingGame extends Component {
     if (eraseStatus) this.setState({ message: 'Eraser Activated' });
     if (!drawStatus && !eraseStatus) this.setState({ message: 'Drawing Paused' });
     this.setState({ draw: drawStatus, erase: eraseStatus });
+  }
+
+  clearCanvas() {
+    drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
   }
 
   runDetection() {
@@ -93,8 +98,8 @@ export default class DrawingGame extends Component {
         <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
         <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
         <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
-        <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
-        <ThreeDScene socket={socket} />
+        <button type="button" onClick={() => clearCanvas()}>Clear</button>
+        <ThreeDScene socket={socket} handleButton={this.handleButton} clearCanvas={this.clearCanvas} />
       </div>
     );
   }

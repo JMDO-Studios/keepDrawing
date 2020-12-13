@@ -1,7 +1,6 @@
 import React from 'react';
-import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Control, Grid, StackPanel3D, GUI3DManager,
+  AdvancedDynamicTexture, Button, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, Button3D, HolographicButton,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -116,7 +115,7 @@ function createTeammate(scene) {
   return sphere;
 }
 
-function createImagePlane(type, sphere, scene, highlightLayer, guiManager= null, controls=null, instance = null) {
+function createImagePlane(type, sphere, scene, highlightLayer, guiManager = null, instance = null) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
@@ -130,8 +129,9 @@ function createImagePlane(type, sphere, scene, highlightLayer, guiManager= null,
   if (type === 'clue' || type === 'drawing') {
     material.opacityTexture = new DynamicTexture('DynamicTexture', { width: mesh.width, height: mesh.height }, scene);
     material.opacityTexture.hasAlpha = true;
-    if (type ==='drawing'){
-      instance.drawingControls = createDrawingControlPanel(mesh, guiManager, controls);
+    if (type === 'drawing') {
+      const { drawingFunctions } = instance;
+      instance.drawingPanel = createDrawingControlPanel(mesh, guiManager, drawingFunctions);
     }
   } else {
     mesh.rotation.y = Math.PI; // rotate the mesh so that the back is showing to the player and video mirrors horizontally
@@ -172,29 +172,46 @@ function createSubmitButton(mesh, instance, socket, scene) {
   advancedTexture.addControl(button);
 }
 
-function makeControlButton(control){}
+function makeControlButton(parent, control) {
+  const buttonText = new TextBlock('button text', control.label);
+  buttonText.color = 'white';
+  buttonText.fontSize = 12;
+  buttonText.fontWeight = 'bold';
+
+  const button = new HolographicButton('drawingControl');
+  parent.addControl(button);
+  button.onPointerUpObservable.add(control.click);
+  button.content = buttonText;
+  const [xScale, yScale] = [0.25, 0.1];
+  button.scaling.x = xScale;
+  button.mesh.getChildren()[1].scaling.x = 1 / xScale;
+  button.scaling.y = yScale;
+  button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
+
+  return button;
+}
+
 function populateControlButtons(panel, controls) {
   controls.forEach((control) => {
-    const button = makeControlButton(control);
-    panel.addControl(button);
+    makeControlButton(panel, control);
   });
-  parent.addControl(panel);
 }
 
 function createDrawingControlPanel(parent, guiManager, controls) {
-  const panel = new StackPanel3D();
-    panel.margin = 0.02;
-    panel.isVertical = true;
-    panel.position.x = parent.position.x;
-    panel.position.y = parent.position.y- 0.3;
-    panel.position.z = parent.position.z;
-
-  populateControlButtons(panel, controls);
+  const heightRatio = 281 / 500;
+  const panel = new StackPanel3D(true);
+  panel.margin = 0.02;
   guiManager.addControl(panel);
-  return panel
+  panel.linkToTransformNode(parent);
+  panel.position.y += heightRatio / 4;
+  panel.position.x += 0.5;
+  panel.position.z += -0.15;
+  panel.scaling.y = heightRatio;
+  populateControlButtons(panel, controls);
+
+  return panel;
 }
-
-
 
 function redrawTexture(mesh, newURL) {
   mesh.material.opacityTexture.updateURL(newURL);
@@ -220,6 +237,23 @@ export default class Game extends React.Component {
     this.state = {
       socket: props.socket,
     };
+    this.drawingFunctions = [{
+      label: 'Start',
+      click: () => props.handleButton(true, false),
+    },
+    {
+      label: 'Stop',
+      click: () => props.handleButton(false, false),
+    },
+    {
+      label: 'Erase',
+      click: () => props.handleButton(false, true),
+    },
+    {
+      label: 'Clear',
+      click: () => props.clearCanvas(),
+    },
+    ];
   }
 
   componentDidMount() {
@@ -232,6 +266,8 @@ export default class Game extends React.Component {
     // create babylon engine, build and customize scene
     [this.engine, this.scene] = initializeScene(canvas);
     const { engine, scene } = this;
+
+    this.buttonManager = new GUI3DManager(scene);
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
@@ -246,7 +282,8 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
-    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
+
+    this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer, this.buttonManager, this);
     const { drawingMesh } = this;
 
     // initialize plane texture URLs
@@ -275,8 +312,6 @@ export default class Game extends React.Component {
     const {
       grid, timer, teamMateName,
     } = createGUI();
-
-    const buttonManager = new GUI3DManager(scene);
 
     const scores = {};
 
