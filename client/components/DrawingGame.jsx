@@ -93,14 +93,7 @@ export default class DrawingGame extends Component {
     const { isVideo, message, socket } = this.state;
     if (!isVideo) startGame();
     return (
-      <div>
-        <div>{message}</div>
-        <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
-        <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
-        <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
-        <button type="button" onClick={() => clearCanvas()}>Clear</button>
-        <ThreeDScene socket={socket} handleButton={this.handleButton} clearCanvas={this.clearCanvas} />
-      </div>
+      <ThreeDScene socket={socket} handleButton={handleButton} clearCanvas={this.clearCanvas} />
     );
   }
 }
