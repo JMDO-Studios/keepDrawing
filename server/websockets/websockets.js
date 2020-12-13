@@ -120,8 +120,8 @@ function joinLobby(socket) {
 
 async function websocketLogic(socket) {
   socket.on('disconnect', () => {
-    console.log('a user disconnected');
-    socket.leave('lobby');
+    console.log('a user disconnected', socket.id);
+    socket.to(socket.teamRoom).emit('teammate disconnected');
   });
   socket.on('change name', ({ name }) => {
     socket.name = name;

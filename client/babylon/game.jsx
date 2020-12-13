@@ -208,7 +208,7 @@ export default class Game extends React.Component {
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
-    this.highlightLayer = new HighlightLayer("hl1", scene);
+    this.highlightLayer = new HighlightLayer('hl1', scene);
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
@@ -341,6 +341,16 @@ export default class Game extends React.Component {
     });
     engine.runRenderLoop(() => {
       scene.render();
+    });
+
+    // connectivity error handling
+    socket.on('teammate disconnected', () => {
+      const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
+      if (response) {
+        socket.emit('return to waiting room');
+        const { handleStatusChange } = this.props;
+        handleStatusChange('waiting room');
+      }
     });
   }
 
