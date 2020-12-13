@@ -224,7 +224,7 @@ export default class Game extends React.Component {
     this.teammate = createTeammate(scene);
     const { teammate } = this;
     this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
-    const { drawingMesh } = this;
+    const { drawingMesh, clueMesh } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -358,7 +358,8 @@ export default class Game extends React.Component {
             }
           }
           // replace clue mesh to dsiplay game results
-          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 256, 256);
+          // const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
+          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(clueMesh, clueMesh.width, clueMesh.height);
           const text1 = new TextBlock('hi text');
           text1.text = `${result}`;
           text1.width = 1;
@@ -371,7 +372,9 @@ export default class Game extends React.Component {
           gameResultsTexture.addControl(text1);
 
           // replace drawingMesh with button
-          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+          // const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(drawingMesh, drawingMesh.width, drawingMesh.height);
+
           // create button for return to waiting room
           const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
           button1.width = '225px';
