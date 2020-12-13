@@ -272,7 +272,8 @@ export default class Game extends React.Component {
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
-    openFullscreen (canvas);
+    //this function makes the game go full screen
+    // openFullscreen (canvas);
 
     // create babylon engine, build and customize scene
     [this.engine, this.scene] = initializeScene(canvas);
