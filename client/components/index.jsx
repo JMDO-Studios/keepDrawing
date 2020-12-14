@@ -5,9 +5,6 @@ import DrawingGame from './DrawingGame';
 import Lobby from './Lobby';
 import Waitingroom from './Waitingroom';
 
-const socket = io();
-socket.name = '';
-
 const modelParams = {
   flipHorizontal: true,
   imageScaleFactor: 1.0,
@@ -26,14 +23,45 @@ export default class Routes extends Component {
       isVideo: false,
       message: 'Please Wait. Video Starting...',
       status: 'lobby',
+      socket: null,
+      name: '',
     };
     this.startVideo = this.startVideo.bind(this);
     this.startGame = this.startGame.bind(this);
     this.handleStatusChange = this.handleStatusChange.bind(this);
+    this.returnToWaitingRoom = this.returnToWaitingRoom.bind(this);
+    this.changeName = this.changeName.bind(this);
+    // this.createSocket = this.createSocket.bind(this);
   }
 
-  handleStatusChange(status) {
+  handleStatusChange(status, name = this.state.name) {
+    if (status === 'waiting room' && this.state.socket === null) {
+      this.setState({ socket: this.createSocket(name) });
+    }
     this.setState({ status });
+  }
+
+  createSocket(name) {
+    const socket = io();
+    socket.name = name;
+    socket.on('disconnect', () => {
+      window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
+      this.returnToWaitingRoom(true);
+    });
+
+    console.log('returning socket', socket);
+    return socket;
+  }
+
+  changeName(name) {
+    this.setState({ name });
+  }
+
+  returnToWaitingRoom(reconnect) {
+    const { socket } = this.state;
+    if (reconnect) socket.open();
+    else socket.emit('leave game');
+    this.handleStatusChange('waiting room');
   }
 
   startVideo() {
@@ -58,21 +86,25 @@ export default class Routes extends Component {
 
   render() {
     this.startGame();
-    const { status, isVideo, message } = this.state;
-    const { handleStatusChange } = this;
+    const {
+      handleStatusChange, returnToWaitingRoom, state, changeName,
+    } = this;
+    const {
+      status, isVideo, message, socket,
+    } = state;
     if (status === 'lobby') {
       return (
-        <Lobby socket={socket} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
+        <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
       );
     }
-    if (status === 'waiting room') {
+    if (status === 'waiting room' && !!socket) {
       return (
         <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
       );
     }
-    if (status === 'game') {
+    if (status === 'game' && !!socket) {
       return (
-        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} />
+        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} returnToWaitingRoom={returnToWaitingRoom} />
       );
     }
     return null;
