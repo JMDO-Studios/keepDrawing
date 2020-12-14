@@ -2,6 +2,14 @@
   display: none;
 }
 
+#drawingCanvas {
+  display: none;
+}
+
+#handCanvas {
+  display: none;
+}
+
 ul {
   display: flex;
   flex-direction: row;

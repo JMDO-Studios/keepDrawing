@@ -10,16 +10,18 @@ class Lobby extends Component {
   }
 
   save(ev) {
-    const { socket } = this.props;
+    const { socket, handleStatusChange } = this.props;
     ev.preventDefault();
-    const { player } = this.state;
-    socket.name = player.name;
-    this.props.history.push('/waitingroom');
+    if (this.state.player.name && this.props.isVideo) {
+      const { player } = this.state;
+      socket.name = player.name;
+      handleStatusChange('waiting room');
+    }
   }
 
   render() {
     const { name } = this.state;
-
+    const { message } = this.props;
     return (
       <div>
         <h1>Lobby Room</h1>
@@ -36,6 +38,7 @@ class Lobby extends Component {
               />
             </label>
             <button type="submit" className="lobby-button"> submit </button>
+            <label>{message}</label>
           </form>
         </div>
       </div>
