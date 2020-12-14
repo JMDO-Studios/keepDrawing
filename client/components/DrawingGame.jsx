@@ -15,6 +15,7 @@ export default class DrawingGame extends Component {
     };
     this.runDetection = this.runDetection.bind(this);
     this.handleButton = this.handleButton.bind(this);
+    this.clearCanvas = this.clearCanvas.bind(this);
   }
 
   handleButton(drawStatus, eraseStatus) {
@@ -22,6 +23,10 @@ export default class DrawingGame extends Component {
     // if (eraseStatus) this.setState({ message: 'Eraser Activated' });
     // if (!drawStatus && !eraseStatus) this.setState({ message: 'Drawing Paused' });
     this.setState({ draw: drawStatus, erase: eraseStatus });
+  }
+
+  clearCanvas() {
+    drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
   }
 
   runDetection() {
@@ -46,16 +51,12 @@ export default class DrawingGame extends Component {
   }
 
   render() {
-    const { handleButton, runDetection } = this;
-    const { socket } = this.props;
+    const { handleButton, runDetection, clearCanvas } = this;
+    const { socket, returnToWaitingRoom } = this.props;
     runDetection();
     return (
       <div>
-        <button type="button" onClick={() => handleButton(true, false)}>Start Drawing</button>
-        <button type="button" onClick={() => handleButton(false, false)}>Stop Drawing</button>
-        <button type="button" onClick={() => handleButton(false, true)}>Erase</button>
-        <button type="button" onClick={() => drawingContext.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height)}>Clear</button>
-        <ThreeDScene socket={socket} />
+        <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} handleButton={handleButton} clearCanvas={clearCanvas} />
       </div>
     );
   }

@@ -3,15 +3,23 @@ import axios from 'axios';
 import Video from 'twilio-video';
 import AudioParticipant from './AudioParticipant';
 
-export default class TwilioChat extends Component {
+export default class AudioChat extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      audioRoom: null,
       remoteParticipants: [],
     };
     this.joinTwilioRoom = this.joinTwilioRoom.bind(this);
     this.participantConnected = this.participantConnected.bind(this);
     this.participantDisconnected = this.participantDisconnected.bind(this);
+  }
+
+  componentWillUnmount() {
+    const { audioRoom } = this.state;
+    if (audioRoom) {
+      audioRoom.disconnect();
+    }
   }
 
   participantConnected(participant) {
@@ -31,37 +39,36 @@ export default class TwilioChat extends Component {
   }
 
   async joinTwilioRoom() {
-    const { participantConnected, participantDisconnected, props } = this;
-    const { socket } = props;
-    const { name, teamName } = socket;
-    const playerDetails = {
-      identity: name,
-      room: teamName,
-    };
-    const { data } = await axios.post('twilio/token', playerDetails);
-    const { token } = data;
-    socket.twilioToken = token;
-    const twilioRoom = await Video.connect(token, {
-      audio: true,
-      name: teamName,
-    });
-    twilioRoom.participants.forEach((participant) => {
-      participantConnected(participant);
-    });
-    twilioRoom.on('participantConnected', (participant) => {
-      participantConnected(participant);
-    });
-    twilioRoom.on('participantDisconnected', (participant) => {
-      participantDisconnected(participant);
-    });
+    try {
+      const { participantConnected, participantDisconnected, props } = this;
+      const { socket } = props;
+      const { name, teamName } = socket;
+      const playerDetails = {
+        identity: name,
+        room: teamName,
+      };
+      const { data } = await axios.post('twilio/token', playerDetails);
+      const { token } = data;
+      const audioRoom = await Video.connect(token, {
+        audio: true,
+        name: teamName,
+      });
+      this.setState({
+        audioRoom,
+      });
+      audioRoom.participants.forEach((participant) => participantConnected(participant));
+      audioRoom.on('participantConnected', (participant) => participantConnected(participant));
+      audioRoom.on('participantDisconnected', (participant) => participantDisconnected(participant));
+    } catch (err) {
+      console.error('Twilio audio chat could not load:', err);
+    }
   }
 
   render() {
     const { joinTwilioRoom, props, state } = this;
     const { socket } = props;
-    const { name, teamName, twilioToken } = socket;
-    const { remoteParticipants } = state;
-    if (name && teamName && !twilioToken) {
+    const { audioRoom, remoteParticipants } = state;
+    if (socket.teamName && !audioRoom) {
       joinTwilioRoom();
     }
     return (

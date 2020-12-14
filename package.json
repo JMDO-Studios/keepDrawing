@@ -14,19 +14,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mxavier927/keepDrawing.git"
+    "url": "git+https://github.com/JMDO-Studios/keepDrawing.git"
   },
   "keywords": [
     "handtrack",
     "game",
-    "aframe"
+    "babylonJS",
+    "Twilio"
   ],
   "author": "Jeff Garber, Mark Guinn, Oscar Sanchez, Doug Miller",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mxavier927/keepDrawing/issues"
+    "url": "https://github.com/JMDO-Studios/keepDrawing/issues"
   },
-  "homepage": "https://github.com/mxavier927/keepDrawing#readme",
+  "homepage": "https://github.com/JMDO-Studios/keepDrawing#readMe",
   "dependencies": {
     "@babylonjs/core": "^4.2.0",
     "@babylonjs/gui": "^4.2.0",

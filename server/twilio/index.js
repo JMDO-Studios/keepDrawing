@@ -16,12 +16,11 @@ router.post('/token', (req, res) => {
     const grant = new VideoGrant();
     grant.room = req.body.room;
     token.addGrant(grant);
-    console.log(token.identity, ' joined Twilio chat room ', grant.room);
     res.send({
       token: token.toJwt(),
     });
   } catch (err) {
-    console.error('Twilio chat could not load: ', err);
+    console.error('Twilio audio chat could not load: ', err);
   }
 });
 
