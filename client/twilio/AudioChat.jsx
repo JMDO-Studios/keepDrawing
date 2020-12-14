@@ -7,7 +7,6 @@ export default class TwilioChat extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      localParticipant: null,
       remoteParticipants: [],
     };
     this.joinTwilioRoom = this.joinTwilioRoom.bind(this);
@@ -46,21 +45,14 @@ export default class TwilioChat extends Component {
       audio: true,
       name: teamName,
     });
-    this.setState({
-      localParticipant: twilioRoom.localParticipant,
-    });
-    console.log(twilioRoom);
     twilioRoom.participants.forEach((participant) => {
       participantConnected(participant);
-      console.log(participant);
     });
     twilioRoom.on('participantConnected', (participant) => {
       participantConnected(participant);
-      console.log(participant);
     });
     twilioRoom.on('participantDisconnected', (participant) => {
       participantDisconnected(participant);
-      console.log(participant.identity, ' left the room');
     });
   }
 
@@ -68,15 +60,12 @@ export default class TwilioChat extends Component {
     const { joinTwilioRoom, props, state } = this;
     const { socket } = props;
     const { name, teamName, twilioToken } = socket;
-    const { localParticipant, remoteParticipants } = state;
+    const { remoteParticipants } = state;
     if (name && teamName && !twilioToken) {
       joinTwilioRoom();
     }
     return (
       <div>
-        <div>Local Participant (YOU!)</div>
-        {localParticipant ? <AudioParticipant participant={localParticipant} /> : null}
-        <div>Your Team:</div>
         {remoteParticipants.map((participant) => (
           <AudioParticipant key={participant.sid} participant={participant} />
         ))}
