@@ -98,9 +98,7 @@ export default class Routes extends Component {
     }
     if (status === 'waiting room' && !!socket) {
       return (
-        <div>
-          <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
-        </div>
+        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
       );
     }
     if (status === 'game' && !!socket) {

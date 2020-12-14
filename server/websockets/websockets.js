@@ -78,7 +78,6 @@ function createActiveGameObject(gameName, lobbyRoster) {
         socket.join(gameName);
         socket.join(teamName);
         io.to(id).emit('goToGame');
-        // console.log(`Socket ${id} is in team ${teamName} in game ${gameName}`);
         socket.leave('lobby');
       } catch (error) {
         console.log(error);

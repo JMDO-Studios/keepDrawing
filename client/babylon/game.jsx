@@ -247,9 +247,6 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      // socket: props.socket,
-    };
     this.drawingFunctions = [
       {
         label: 'Clear',
