@@ -101,7 +101,7 @@ function createGround(scene) {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.checkCollisions = true;
   const groundMat = new StandardMaterial('groundMat');
-  groundMat.diffuseTexture = new Texture('https://www.babylonjs-playground.com/textures/grass.dds', scene);
+  groundMat.diffuseTexture = new Texture('https://doc.babylonjs.com/_next/image?url=%2Fimg%2Fresources%2Ftextures_thumbs%2Falbedo.png.jpg&w=1920&q=75', scene);
   ground.material = groundMat;
 
   return ground;
@@ -121,12 +121,25 @@ function initalizeCamera(canvas, scene) {
 
   return camera;
 }
-
 function createTeammate(scene) {
-  const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 0.5 }, scene);
+  const sphere = MeshBuilder.CreateSphere('sphere', { diameter: .5 }, scene);
+  const bomb = new StandardMaterial('bomb');
+  bomb.ambientTexture = new Texture("https://www.babylonjs-playground.com/textures/speckles.jpg");
+  bomb.diffuseColor = new Color3(0, 0, 0);
+  sphere.material = bomb;
   sphere.checkCollisions = true;
   sphere.position = new Vector3(0, 1, 2);
+  return sphere;
+}
 
+function createTeammate2(scene) {
+  const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1.1 }, scene);
+  const bomb = new StandardMaterial('bomb');
+  bomb.emissiveTexture = new Texture("https://www.babylonjs-playground.com/textures/lava/lavatile.jpg", scene);
+  bomb.diffuseColor = new Color3(2, 1, 0);
+  sphere.material = bomb;
+  sphere.checkCollisions = true;
+  sphere.position = new Vector3(0, 1, 2);
   return sphere;
 }
 
@@ -404,6 +417,7 @@ export default class Game extends React.Component {
 
     // start clock
     socket.on('startClock', (gameState) => {
+      console.log('this, ', this)
       const { time } = gameState;
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
@@ -419,6 +433,9 @@ export default class Game extends React.Component {
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
           timer.text = String(Math.round(count));
+          if (timer.text === '1') {
+            createTeammate2(this.scene);
+          }
         }
         if (count <= 0 && runCount < 1) {
           let result = 'You Won!';
