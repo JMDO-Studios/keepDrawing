@@ -48,8 +48,6 @@ export default class Routes extends Component {
       window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
       this.returnToWaitingRoom(true);
     });
-
-    console.log('returning socket', socket);
     return socket;
   }
 
@@ -104,7 +102,7 @@ export default class Routes extends Component {
     }
     if (status === 'game' && !!socket) {
       return (
-        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} handleStatusChange={handleStatusChange} returnToWaitingRoom={returnToWaitingRoom} />
+        <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
       );
     }
     return null;

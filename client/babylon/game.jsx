@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 import React from 'react';
 import {
-  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton,
+  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton, Button,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -407,7 +407,7 @@ export default class Game extends React.Component {
       const { time } = gameState;
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
-      const { handleStatusChange } = this.props;
+      const { returnToWaitingRoom } = this.props;
 
       if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
       let runCount = 0;
@@ -421,14 +421,12 @@ export default class Game extends React.Component {
           timer.text = String(Math.round(count));
         }
         if (count <= 0 && runCount < 1) {
-        // this.submitButton.dispose() (get rid of submit button)
-        // if (runCount < 1) {
           let result = 'You Won!';
           timer.text = 'BOOM!';
-          // compare points from details against scores object to determine who won
+          if (this.clueMesh.id === 'clue') this.submitButton.dispose(true, true);
+          // compare your points against other teams in scores object to determine who won
           for (const team in scores) {
             const currTeam = scores[team];
-            // clue giver mesh for game results is upside down or reversed
             if (currTeam.score > scores[socket.teamName].score) {
               result = 'You Lost';
               break;
@@ -439,9 +437,8 @@ export default class Game extends React.Component {
           }
           // replace clue mesh to dsiplay game results
           const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
+          // Mesh is flipped to show video correctly. statement below flips the mesh back to normal
           if (this.clueMesh.id === 'hand') this.clueMesh.rotation.y = 0;
-          // console.log(gameResultsTexture);
-          console.log(this.clueMesh);
           const text1 = new TextBlock('hi text');
           text1.text = `${result}`;
           text1.width = 1;
@@ -460,14 +457,10 @@ export default class Game extends React.Component {
           button1.cornerRadius = 20;
           button1.background = 'grey';
           button1.onPointerUpObservable.add(() => {
-            // socket.emit('leavingGame');
-            handleStatusChange('waiting room');
-            // delete game? socket.emit and then socket.on
-            // for delete game make sure to delete game for all parties?
+            returnToWaitingRoom();
           });
           buttonTexture.addControl(button1);
           runCount += 1;
-          // }
         }
       });
     });
