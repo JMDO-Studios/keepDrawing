@@ -247,9 +247,6 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      socket: props.socket,
-    };
     this.drawingFunctions = [
       {
         label: 'Clear',
@@ -271,7 +268,7 @@ export default class Game extends React.Component {
   }
 
   componentDidMount() {
-    const { socket } = this.state;
+    const { socket } = this.props;
 
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
@@ -354,7 +351,6 @@ export default class Game extends React.Component {
         this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
       }
       // create your team first so that it always shows up first in list
-      // console.log('grid is', grid);
       initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
