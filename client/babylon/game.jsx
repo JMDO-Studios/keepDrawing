@@ -1,12 +1,21 @@
 import React from 'react';
-import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
+  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
   StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3, HighlightLayer,
 } from '@babylonjs/core';
+
+function openFullscreen(elem) {
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+  }
+}
 
 function createTextBox(initialText, parent) {
   const canvasHeight = document.getElementById('gameCanvas').height;
@@ -123,7 +132,7 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   const mesh = MeshBuilder.CreatePlane(type,
     { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
     scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.1 : sphere.position.x - meshWidth / 2 - 0.1,
+  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -143,30 +152,73 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   return mesh;
 }
 
-function createButtonPlane(type, parent, scene) {
-  const mesh = MeshBuilder.CreatePlane(type,
-    { width: 0.5, height: 0.1, sideOrientation: Mesh.DOUBLESIDE },
-    scene);
-  mesh.position = new Vector3(
-    parent.position.x,
-    parent.position.y - 0.5,
-    parent.position.z,
-  );
-  return mesh;
-}
+function createSubmitButton(parent, instance, socket, guiManager) {
+  const buttonText = new TextBlock('button text', 'Submit');
+  buttonText.color = 'white';
+  buttonText.fontSize = 12;
+  buttonText.fontWeight = 'bold';
+  buttonText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
 
-function createButton(mesh, instance, socket, scene) {
-  const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-  const button = Button.CreateSimpleButton('but1', 'Submit', scene);
-  // button.width = 1;
-  button.height = 1;
-  button.color = 'white';
-  button.fontSize = 50;
-  button.background = 'green';
+  const button = new HolographicButton('submitButton');
+  guiManager.addControl(button);
+  button.linkToTransformNode(parent);
+  button.position.y += -0.4;
   button.onPointerUpObservable.add(() => {
     socket.emit('submitDrawing', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
   });
-  advancedTexture.addControl(button);
+  button.content = buttonText;
+  const [xScale, yScale] = [0.5, 0.1];
+  button.scaling.x = xScale;
+  button.mesh.getChildren()[1].scaling.x = 1 / xScale;
+  button.scaling.y = yScale;
+  button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.scaling.z = 0.5;
+  button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
+
+  return button;
+}
+
+function makeControlButton(parent, control) {
+  const buttonText = new TextBlock('button text', control.label);
+  buttonText.color = 'white';
+  buttonText.fontSize = 12;
+  buttonText.fontWeight = 'bold';
+  buttonText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+  const button = new HolographicButton('drawingControl');
+  parent.addControl(button);
+  button.onPointerUpObservable.add(control.click);
+  button.content = buttonText;
+  const [xScale, yScale] = [0.2, 0.1];
+  button.scaling.x = xScale;
+  button.mesh.getChildren()[1].scaling.x = 1 / xScale;
+  button.scaling.y = yScale;
+  button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.scaling.z = 0.5;
+  button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
+
+  return button;
+}
+
+function populateControlButtons(panel, controls) {
+  controls.forEach((control) => {
+    makeControlButton(panel, control);
+  });
+}
+
+function createDrawingControlPanel(parent, guiManager, controls) {
+  const heightRatio = 281 / 500;
+  const panel = new StackPanel3D(true);
+  panel.margin = 0.02;
+  guiManager.addControl(panel);
+  panel.linkToTransformNode(parent);
+  panel.position.y += heightRatio / 4;
+  // panel.position.x += 0.7;
+  panel.position.x += -0.65;
+  panel.scaling.y = heightRatio;
+  populateControlButtons(panel, controls);
+
+  return panel;
 }
 
 function redrawTexture(mesh, newURL) {
@@ -193,6 +245,24 @@ export default class Game extends React.Component {
     this.state = {
       socket: props.socket,
     };
+    this.drawingFunctions = [
+      {
+        label: 'Clear',
+        click: () => props.clearCanvas(),
+      },
+      {
+        label: 'Erase',
+        click: () => props.handleButton(false, true),
+      },
+      {
+        label: 'Stop',
+        click: () => props.handleButton(false, false),
+      },
+      {
+        label: 'Start',
+        click: () => props.handleButton(true, false),
+      },
+    ];
   }
 
   componentDidMount() {
@@ -202,9 +272,14 @@ export default class Game extends React.Component {
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
+    //this function makes the game go full screen
+    // openFullscreen (canvas);
+
     // create babylon engine, build and customize scene
     [this.engine, this.scene] = initializeScene(canvas);
     const { engine, scene } = this;
+
+    this.buttonManager = new GUI3DManager(scene);
 
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
@@ -219,6 +294,7 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
+
     this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
     const { drawingMesh } = this;
 
@@ -267,10 +343,10 @@ export default class Game extends React.Component {
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
       }
       // create your team first so that it always shows up first in list
       console.log('grid is', grid);
@@ -280,7 +356,7 @@ export default class Game extends React.Component {
       Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
           // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          const label = `Team ${idx}`;
+          const label = `Team ${idx+1}`;
           initializeScores(label, scores, team, grid);
         }
       });
@@ -304,10 +380,11 @@ export default class Game extends React.Component {
     socket.on('new clue', ({ clueURL }) => {
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
-        this.buttonMesh.dispose(true, true);
+        this.submitButton.dispose(true, true);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         socket.role = 'clueGiver';
         // delete mesh, replace it with appropriate version, add observable
@@ -315,8 +392,8 @@ export default class Game extends React.Component {
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        this.submitButton = createSubmitButton(drawingMesh, this, scene, this.buttonManager);
+        this.drawingPanel.dispose();
       }
     });
 
