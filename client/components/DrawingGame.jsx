@@ -56,7 +56,7 @@ export default class DrawingGame extends Component {
     runDetection();
     return (
       <div>
-        <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} />
+        <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} handleButton={handleButton} clearCanvas={this.clearCanvas} />
       </div>
     );
   }
