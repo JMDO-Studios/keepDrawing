@@ -47,7 +47,7 @@ export default class AudioChat extends Component {
         identity: name,
         room: teamName,
       };
-      const { data } = await axios.post('twilio/token', playerDetails);
+      const { data } = await axios.post('twilio/video/token', playerDetails);
       const { token } = data;
       const audioRoom = await Video.connect(token, {
         audio: true,
