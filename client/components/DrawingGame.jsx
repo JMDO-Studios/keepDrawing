@@ -52,10 +52,12 @@ export default class DrawingGame extends Component {
 
   render() {
     const { handleButton, runDetection } = this;
-    const { socket } = this.props;
+    const { socket, returnToWaitingRoom } = this.props;
     runDetection();
     return (
-      <ThreeDScene socket={socket} handleButton={handleButton} clearCanvas={this.clearCanvas} />
+      <div>
+        <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} handleButton={handleButton} clearCanvas={this.clearCanvas} />
+      </div>
     );
   }
 }

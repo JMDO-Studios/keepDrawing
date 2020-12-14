@@ -419,6 +419,16 @@ export default class Game extends React.Component {
     engine.runRenderLoop(() => {
       scene.render();
     });
+
+    // connectivity error handling
+    socket.on('teammate disconnected', () => {
+      const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
+      if (response) {
+        console.log('go to waiting room')
+        const { returnToWaitingRoom } = this.props;
+        returnToWaitingRoom(false);
+      }
+    });
   }
 
   render() {
