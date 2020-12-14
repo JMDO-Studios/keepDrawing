@@ -137,11 +137,9 @@ async function websocketLogic(socket) {
   socket.on('chat message', (message) => {
     io.to('lobby').emit('chat message', message);
   });
-
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
-
   socket.on('submitDrawing', ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
     const currentClue = teamState.currentClueURL;

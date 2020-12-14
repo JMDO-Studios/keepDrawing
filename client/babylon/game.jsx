@@ -1,6 +1,9 @@
+/* eslint-disable no-lonely-if */
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
 import React from 'react';
 import {
-  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton,
+  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton, Button,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
@@ -74,12 +77,14 @@ function createScoreDisplay(teamNames, parent) {
 function initializeScores(labelText, scores, teamName, parent) {
   scores[teamName] = { score: 0, names: labelText };
   scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
+  //emit something to send the other team our score?
 }
 
 function updateScore(teamName, newScore, scores) {
   const teamScore = scores[teamName];
   teamScore.score = newScore;
   teamScore.scoreDisplay.text = `${newScore}`;
+  //emit something to send the other team out score?
 }
 
 function initializeScene(canvas) {
@@ -296,7 +301,7 @@ export default class Game extends React.Component {
     const { teammate } = this;
 
     this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
-    const { drawingMesh } = this;
+    const { drawingMesh, clueMesh } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -349,7 +354,7 @@ export default class Game extends React.Component {
         this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
       }
       // create your team first so that it always shows up first in list
-      console.log('grid is', grid);
+      // console.log('grid is', grid);
       initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
@@ -402,9 +407,10 @@ export default class Game extends React.Component {
       const { time } = gameState;
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
+      const { returnToWaitingRoom } = this.props;
 
       if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
-
+      let runCount = 0;
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
@@ -413,7 +419,49 @@ export default class Game extends React.Component {
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
           timer.text = String(Math.round(count));
-        } else timer.text = 'BOOM!';
+        }
+        if (count <= 0 && runCount < 1) {
+          let result = 'You Won!';
+          timer.text = 'BOOM!';
+          if (this.clueMesh.id === 'clue') this.submitButton.dispose(true, true);
+          // compare your points against other teams in scores object to determine who won
+          for (const team in scores) {
+            const currTeam = scores[team];
+            if (currTeam.score > scores[socket.teamName].score) {
+              result = 'You Lost';
+              break;
+            }
+            if (currTeam.score === scores[socket.teamName].score && currTeam.names !== 'Your Score') {
+              result = 'You Tied';
+            }
+          }
+          // replace clue mesh to dsiplay game results
+          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
+          // Mesh is flipped to show video correctly. statement below flips the mesh back to normal
+          if (this.clueMesh.id === 'hand') this.clueMesh.rotation.y = 0;
+          const text1 = new TextBlock('hi text');
+          text1.text = `${result}`;
+          text1.width = 1;
+          text1.height = 1;
+          text1.color = 'black';
+          text1.fontSize = 50;
+          text1.textWrapping = true;
+          gameResultsTexture.addControl(text1);
+          // replace drawingMesh with button
+          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+          // create button for return to waiting room
+          const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
+          button1.width = '225px';
+          button1.height = '75px';
+          button1.color = 'black';
+          button1.cornerRadius = 20;
+          button1.background = 'grey';
+          button1.onPointerUpObservable.add(() => {
+            returnToWaitingRoom();
+          });
+          buttonTexture.addControl(button1);
+          runCount += 1;
+        }
       });
     });
     engine.runRenderLoop(() => {
