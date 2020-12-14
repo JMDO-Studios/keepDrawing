@@ -10,7 +10,7 @@ export default class AudioChat extends Component {
       audioRoom: null,
       remoteParticipants: [],
     };
-    this.joinTwilioRoom = this.joinTwilioRoom.bind(this);
+    this.joinAudioChat = this.joinAudioChat.bind(this);
     this.participantConnected = this.participantConnected.bind(this);
     this.participantDisconnected = this.participantDisconnected.bind(this);
   }
@@ -38,7 +38,7 @@ export default class AudioChat extends Component {
     });
   }
 
-  async joinTwilioRoom() {
+  async joinAudioChat() {
     try {
       const { participantConnected, participantDisconnected, props } = this;
       const { socket } = props;
@@ -47,7 +47,7 @@ export default class AudioChat extends Component {
         identity: name,
         room: teamName,
       };
-      const { data } = await axios.post('twilio/video/token', playerDetails);
+      const { data } = await axios.post('twilio/audio/token', playerDetails);
       const { token } = data;
       const audioRoom = await Video.connect(token, {
         audio: true,
@@ -65,11 +65,11 @@ export default class AudioChat extends Component {
   }
 
   render() {
-    const { joinTwilioRoom, props, state } = this;
+    const { joinAudioChat, props, state } = this;
     const { socket } = props;
     const { audioRoom, remoteParticipants } = state;
     if (socket.teamName && !audioRoom) {
-      joinTwilioRoom();
+      joinAudioChat();
     }
     return (
       <div>
