@@ -1,3 +1,4 @@
+/* eslint-disable no-lonely-if */
 /* eslint-disable guard-for-in */
 /* eslint-disable no-restricted-syntax */
 import React from 'react';
@@ -332,7 +333,7 @@ export default class Game extends React.Component {
       const { handleStatusChange } = this.props;
 
       if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
-
+      let runCount = 0;
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
@@ -341,10 +342,12 @@ export default class Game extends React.Component {
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
           timer.text = String(Math.round(count));
-        } else {
+        }
+        if (count <= 0 && runCount < 1) {
+        // this.submitButton.dispose() (get rid of submit button)
+        // if (runCount < 1) {
           let result = 'You Won!';
           timer.text = 'BOOM!';
-          console.log(scores[socket.teamName].score);
           // compare points from details against scores object to determine who won
           for (const team in scores) {
             const currTeam = scores[team];
@@ -358,23 +361,20 @@ export default class Game extends React.Component {
             }
           }
           // replace clue mesh to dsiplay game results
-          // const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
-          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(clueMesh, clueMesh.width, clueMesh.height);
+          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
+          if (this.clueMesh.id === 'hand') this.clueMesh.rotation.y = 0;
+          // console.log(gameResultsTexture);
+          console.log(this.clueMesh);
           const text1 = new TextBlock('hi text');
           text1.text = `${result}`;
           text1.width = 1;
           text1.height = 1;
           text1.color = 'black';
-          text1.fontSize = 35;
-          // text1.fontWeight = "bold";
-          text1.fontFamily = 'Impact';
+          text1.fontSize = 50;
           text1.textWrapping = true;
           gameResultsTexture.addControl(text1);
-
           // replace drawingMesh with button
-          // const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
-          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(drawingMesh, drawingMesh.width, drawingMesh.height);
-
+          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
           // create button for return to waiting room
           const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
           button1.width = '225px';
@@ -383,12 +383,14 @@ export default class Game extends React.Component {
           button1.cornerRadius = 20;
           button1.background = 'grey';
           button1.onPointerUpObservable.add(() => {
-            socket.emit('leavingGame');
+            // socket.emit('leavingGame');
             handleStatusChange('waiting room');
             // delete game? socket.emit and then socket.on
             // for delete game make sure to delete game for all parties?
           });
           buttonTexture.addControl(button1);
+          runCount += 1;
+          // }
         }
       });
     });
