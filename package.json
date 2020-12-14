@@ -4,7 +4,7 @@
   "description": "a suite of games based on handtrackjs",
   "main": "index.js",
   "scripts": {
-    "start": "node main",
+    "start": "node index.js",
     "start-dev": "npm run build-watch & npm run start-server",
     "start-server": "nodemon main -e html,js,css --ignore public",
     "build-watch": "webpack -w --mode=\"development\"",
