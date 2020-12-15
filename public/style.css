@@ -57,15 +57,21 @@ li {
   align-items: center;
   text-align: center;
   height: 20vh;
-  width: 20vw;
+  width: 14em;
+  /* width: 20vw; */
 }
 
 .lobby-div {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   text-align: center;
   align-items: center;
-  height: 60vh;
+  /* height: 60vh; */
+}
+
+.lobby-label {
+  padding-bottom: .1em;
 }
 
 .lobby-input, .lobby-button, .lobby-status {
@@ -74,7 +80,7 @@ li {
   justify-content: space-around;
   padding-left: 0;
   padding-right: 0;
-  width: 15em;
+  width: 14em;
 }
 
 .lobby-button {
@@ -82,12 +88,18 @@ li {
   text-align: center;
 }
 
-.lobby-status {
+/* .lobby-status {
   height:fit-content;
+} */
+
+p {
+  text-align: left;
+  margin-top: .2em;
+  margin-bottom: .2em;
 }
 
-h1 {
-  padding-top: 5vh;
+h1, h3, .footer-text{
+  padding-top: 2vh;
   text-align: center;
   color: dodgerblue;
   font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif
@@ -101,4 +113,12 @@ a{
 
 .nav-lobby {
   color: dodgerblue;
+}
+
+.lobby-info {
+  width: 80vh;
+}
+
+.footer-text {
+  padding-top:4vh;
 }

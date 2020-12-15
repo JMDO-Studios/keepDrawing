@@ -5,6 +5,7 @@ import AudioChat from '../twilio/AudioChat';
 import DrawingGame from './DrawingGame';
 import Lobby from './Lobby';
 import Waitingroom from './Waitingroom';
+import Footer from './Footer';
 
 const modelParams = {
   flipHorizontal: true,
@@ -73,7 +74,7 @@ export default class Routes extends Component {
     handTrack.startVideo(video)
       .then((status) => {
         if (status) {
-          this.setState({ isVideo: true, message: 'Create Username and Press Submit to Join Waiting Room' });
+          this.setState({ isVideo: true, message: 'Press play to Join.' });
         } else {
           this.setState({ message: 'Please enable your video' });
         }
@@ -98,12 +99,18 @@ export default class Routes extends Component {
     } = state;
     if (status === 'lobby') {
       return (
-        <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} name={name} />
+        <div>
+          <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} name={name} />
+          <Footer />
+        </div>
       );
     }
     if (status === 'waiting room' && !!socket) {
       return (
-        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+        <div>
+          <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+          <Footer />
+        </div>
       );
     }
     if (status === 'game' && !!socket) {
