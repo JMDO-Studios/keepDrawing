@@ -45,6 +45,7 @@ export default class Routes extends Component {
 
   createSocket(name) {
     const socket = io();
+    console.log(socket);
     socket.name = name;
     socket.on('disconnect', () => {
       window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
@@ -85,35 +86,34 @@ export default class Routes extends Component {
   }
 
   render() {
-    this.startGame();
     const {
-      handleStatusChange, returnToWaitingRoom, state, changeName,
+      startGame, handleStatusChange, returnToWaitingRoom, state, changeName,
     } = this;
     const {
       status, isVideo, message, socket,
     } = state;
+    if (!isVideo) {
+      startGame();
+    }
     if (status === 'lobby') {
       return (
         <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
       );
     }
-    if (status === 'waiting room' && !!socket) {
-      return (
-        <div className="mainAndChat">
-          <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
-          <ChatRoom socket={socket} />
-        </div>
-      );
-    }
-    if (status === 'game' && !!socket) {
-      return (
-        <div>
-          <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
-          <AudioChat socket={socket} />
-          <ChatRoom socket={socket} />
-        </div>
-      );
-    }
-    return null;
+    return (
+      <div>
+        {status === 'waiting room' && !!socket ? <Waitingroom socket={socket} handleStatusChange={handleStatusChange} /> 
+          : null}
+        {status === 'game' && !!socket
+          ? (
+            <div>
+              <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
+              <AudioChat socket={socket} />
+            </div>
+          )
+          : null}
+        <ChatRoom socket={socket} />
+      </div>
+    );
   }
 }

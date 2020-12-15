@@ -15,6 +15,12 @@ export default class AudioChat extends Component {
     this.participantDisconnected = this.participantDisconnected.bind(this);
   }
 
+  componentDidMount() {
+    const { joinAudioChat, props } = this;
+    const { socket } = props;
+    socket.on('initialize', ({ teamName }) => joinAudioChat(teamName));
+  }
+
   componentWillUnmount() {
     const { audioRoom } = this.state;
     if (audioRoom) {
@@ -38,20 +44,20 @@ export default class AudioChat extends Component {
     });
   }
 
-  async joinAudioChat() {
+  async joinAudioChat(team) {
     try {
       const { participantConnected, participantDisconnected, props } = this;
       const { socket } = props;
-      const { name, teamName } = socket;
+      const { name } = socket;
       const playerDetails = {
         identity: name,
-        room: teamName,
+        room: team,
       };
       const { data } = await axios.post('twilio/audio/token', playerDetails);
       const { token } = data;
       const audioRoom = await Video.connect(token, {
         audio: true,
-        name: teamName,
+        name: team,
       });
       this.setState({
         audioRoom,
@@ -67,10 +73,14 @@ export default class AudioChat extends Component {
   render() {
     const { joinAudioChat, props, state } = this;
     const { socket } = props;
+    const { teamName } = socket;
     const { audioRoom, remoteParticipants } = state;
-    if (socket.teamName && !audioRoom) {
-      joinAudioChat();
+    console.log('audio room: ', audioRoom);
+    if (teamName && audioRoom === null) {
+      console.log('when do we try to join the AudioChat in the render?');
+      joinAudioChat(teamName);
     }
+    console.log('participants: ', remoteParticipants);
     return (
       <div>
         {remoteParticipants.map((participant) => (
