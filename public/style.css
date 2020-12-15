@@ -50,13 +50,24 @@ li {
   height: 10vh;
 }
 
+header {
+  position: fixed;
+  top:0;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: white;
+}
+
 .lobby-form {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
   text-align: center;
-  height: 20vh;
+  height: fit-content;
   width: 20vw;
 }
 
@@ -65,7 +76,7 @@ li {
   justify-content: center;
   text-align: center;
   align-items: center;
-  height: 60vh;
+  height: fit-content;
 }
 
 .lobby-input, .lobby-button, .lobby-status {
@@ -86,11 +97,17 @@ li {
   height:fit-content;
 }
 
-h1 {
-  padding-top: 5vh;
+h1, h3, h4 {
   text-align: center;
   color: dodgerblue;
   font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif
+}
+
+.instructions{
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+  margin-top: 15rem;
 }
 
 a{
