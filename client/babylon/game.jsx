@@ -138,7 +138,8 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   const mesh = MeshBuilder.CreatePlane(type, {
     width: meshWidth,
     height: scaledHeight,
-    sideOrientation: Mesh.DOUBLESIDE }, scene);
+    sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
   const meshPositionX = type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15;
   mesh.position = new Vector3(meshPositionX,
     sphere.position.y + scaledHeight,
@@ -228,17 +229,21 @@ function createDrawingControlPanel(parent, guiManager, controls) {
   return panel;
 }
 
-function redrawTexture(mesh, newURL) {
-  mesh.material.opacityTexture.updateURL(newURL);
+async function redrawTexture(mesh, newURL, scene) {
+  const newTexture = new Texture(newURL, scene, true, true, null, () => {
+    const oldTexture = mesh.material.opacityTexture;
+    mesh.material.opacityTexture = newTexture;
+    mesh.material.opacityTexture.hasAlpha = true;
+    oldTexture.dispose();
+  });
 }
 
 function addDrawingObservable(instance, scene, drawingMesh, socket) {
   instance.drawingObservable = scene.onBeforeRenderObservable.add(() => {
-    console.log('getting local canvas');
     const drawingImage = document.getElementById('drawingCanvas');
     const drawingImageURL = drawingImage.toDataURL();
     if (drawingImageURL !== instance.lastSentDrawingURL) {
-      redrawTexture(drawingMesh, drawingImageURL);
+      redrawTexture(drawingMesh, drawingImageURL, scene);
       instance.lastSentDrawingURL = drawingImageURL;
       socket.emit('drawingChanged', {
         imageData: drawingImageURL,
@@ -368,12 +373,9 @@ export default class Game extends React.Component {
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      redrawTexture(drawingMesh, drawingURL);
+      redrawTexture(drawingMesh, drawingURL, scene);
       this.lastReceivedDrawingURL = drawingURL;
     });
-
-    // share resemblejs results with team
-    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {
@@ -397,7 +399,7 @@ export default class Game extends React.Component {
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        redrawTexture(this.clueMesh, clueURL);
+        redrawTexture(this.clueMesh, clueURL, scene);
         this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
         this.drawingPanel.dispose();
       }
@@ -410,7 +412,7 @@ export default class Game extends React.Component {
       const { currentClueURL } = teamInfo;
       const { returnToWaitingRoom } = this.props;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data, scene);
       let runCount = 0;
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
@@ -475,7 +477,6 @@ export default class Game extends React.Component {
     socket.on('teammate disconnected', () => {
       const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
       if (response) {
-        console.log('go to waiting room');
         const { returnToWaitingRoom } = this.props;
         returnToWaitingRoom(false);
       }
