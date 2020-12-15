@@ -85,7 +85,6 @@ function createActiveGameObject(gameName, lobbyRoster) {
     }
   }
 }
-
 function deleteGame(gameName) {
   // we should make any remaining sockets leave the game room and their team rooms before deleting the object
   delete activeGames[gameName];
@@ -111,6 +110,14 @@ function joinLobby(socket) {
           drawer: team.drawer,
           clueGiver: team.clueGiver,
           teams: allTeams,
+        });
+        io.to(teamName).emit('createTeamChatRoom', {
+          teamName,
+          clueGiver: team.clueGiver,
+          drawer: team.drawer,
+        });
+        socket.on('teamChatReady', (readyTeam) => {
+          io.to(readyTeam).emit('joinTeamChat', readyTeam);
         });
       });
       io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);

@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import io from 'socket.io-client';
 import * as handTrack from 'handtrackjs';
-const { v4: uuidv4 } = require('uuid');
 import AudioChat from '../twilio/AudioChat';
 import ChatRoom from '../twilio/ChatRoom';
 import DrawingGame from './DrawingGame';
 import Lobby from './Lobby';
 import Waitingroom from './Waitingroom';
+
+const { v4: uuidv4 } = require('uuid');
 
 const modelParams = {
   flipHorizontal: true,

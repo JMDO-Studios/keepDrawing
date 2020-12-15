@@ -27,7 +27,7 @@ export default class ChatRoom extends Component {
       getToken, joinChannel, leaveChannel, props,
     } = this;
     const { socket } = props;
-    const { chatId } = socket;
+    const { name, chatId } = socket;
     console.log('socket ID: ', chatId);
     const token = await getToken();
     const client = await Client.create(token);
@@ -47,22 +47,29 @@ export default class ChatRoom extends Component {
     } catch (err) {
       console.error('Chatroom could not load: ', err);
     }
-    // socket.on('initialize', async ({ teamName, drawer }) => {
-    //   try {
-    //     const channel = await client.getChannelByUniqueName(teamName);
-    //     joinChannel(channel);
-    //   } catch {
-    //     try {
-    //       const channel = await client.createChannel({
-    //         uniqueName: teamName,
-    //         friendlyName: teamName,
-    //       });
-    //       joinChannel(channel);
-    //     } catch (err) {
-    //       console.error('Chatroom could not load: ', err);
-    //     }
-    //   }
-    // });
+    socket.on('createTeamChatRoom', async ({ teamName, clueGiver, drawer }) => {
+      if (clueGiver.name === name) {
+        try {
+          const channel = await client.getChannelByUniqueName(teamName);
+          console.log('somehow the room exists');
+          socket.emit('teamChatReady', teamName);
+        } catch {
+          try {
+            const channel = await client.createChannel({
+              uniqueName: teamName,
+            });
+            console.log(`${name} created a new channel:`, channel);
+            socket.emit('teamChatReady', teamName);
+          } catch (err) {
+            console.error('Chatroom could not load: ', err);
+          }
+        }
+      }
+    });
+    socket.on('joinTeamChat', async (teamName) => {
+      const channel = await client.getChannelByUniqueName(teamName);
+      joinChannel(channel);
+    });
   }
 
   async componentWillUnmount() {
