@@ -53,8 +53,8 @@ class Lobby extends Component {
           <p>Once there enough players, you will automatically join a game</p>
 
           <h3>Gameplay Instruction:</h3>
-          <p>There are two players on a team</p>
-          <p>The game is timed.</p>
+          <p>Games are for four players on teams of two</p>
+          <p>Each game lasts 180 seconds</p>
           <p>Teams consist of a Clue Giver and a Drawer</p>
           <p>Work together to draw pictures that match the clue image</p>
           <p>The closer the drawing is to the clue, the more points you get</p>
