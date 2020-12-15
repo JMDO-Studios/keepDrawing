@@ -24,13 +24,14 @@ class Lobby extends Component {
     const { message } = this.props;
     return (
       <div>
-        <h1>Lobby Room</h1>
+        <h1>Keep Drawing!</h1>
         <div className="lobby-div">
           <form className="lobby-form" onSubmit={this.save}>
-            <label htmlFor="username" className="lobby-label">Username:
+            <label htmlFor="username" className="lobby-label">Enter name:
               <input
                 name="username"
                 className="lobby-input"
+                placeholder="Nickname"
                 value={name}
                 onChange={(ev) => {
                   this.setState({
@@ -39,8 +40,8 @@ class Lobby extends Component {
                 }}
               />
             </label>
-            <button type="submit" className="lobby-button"> submit </button>
-            <p className="lobby-status">{message}</p>
+            <button type="submit" className="lobby-button"> Play </button>
+            <p className ='lobby-status'>{message}</p>
           </form>
         </div>
       </div>
