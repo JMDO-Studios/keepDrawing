@@ -48,9 +48,9 @@ export default class AudioChat extends Component {
     try {
       const { participantConnected, participantDisconnected, props } = this;
       const { socket } = props;
-      const { name } = socket;
+      const { chatId } = socket;
       const playerDetails = {
-        identity: name,
+        identity: chatId,
         room: team,
       };
       const { data } = await axios.post('twilio/audio/token', playerDetails);

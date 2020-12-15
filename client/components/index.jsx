@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import io from 'socket.io-client';
 import * as handTrack from 'handtrackjs';
+const { v4: uuidv4 } = require('uuid');
 import AudioChat from '../twilio/AudioChat';
 import ChatRoom from '../twilio/ChatRoom';
 import DrawingGame from './DrawingGame';
@@ -47,16 +48,18 @@ export default class Routes extends Component {
   }
 
   createSocket(name) {
-    let { socket } = this.state;
+    // let { socket } = this.state;
     if (!this.state.socket) {
-      socket = io();
+      const socket = io();
       socket.name = name;
+      socket.chatId = uuidv4();
       socket.on('disconnect', () => {
         window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
         this.returnToWaitingRoom(true);
       });
+      return socket;
     }
-    return socket;
+    return this.state.socket;
   }
 
   changeName(name) {
