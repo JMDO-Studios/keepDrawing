@@ -39,7 +39,7 @@ export default class ChatRoom extends Component {
       const messages = await channel.getMessages();
       this.setState({ messages: messages.items || [] });
     });
-    socket.on('initialize', async ({ teamName }) => {
+    socket.on('initialize', async ({ teamName, drawer }) => {
       try {
         const channel = await client.getChannelByUniqueName(teamName);
         joinChannel(channel);
