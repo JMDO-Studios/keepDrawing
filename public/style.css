@@ -62,10 +62,15 @@ li {
 
 .lobby-div {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   text-align: center;
   align-items: center;
   height: 60vh;
+}
+
+.instructions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .lobby-input, .lobby-button, .lobby-status {

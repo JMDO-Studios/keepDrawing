@@ -41,11 +41,11 @@ class Lobby extends Component {
               />
             </label>
             <button type="submit" className="lobby-button"> Play </button>
-            <p className ='lobby-status'>{message}</p>
+            <p className="lobby-status">{message}</p>
           </form>
         </div>
         <div>
-          <h3>SetUp Instructions:</h3>
+          <h3>Login Instructions:</h3>
           <p>When instructed, enter a username and press submit</p>
           <p>Once there enough players you will automatically go to the game</p>
 
