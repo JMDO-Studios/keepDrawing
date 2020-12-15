@@ -27,8 +27,7 @@ export default class ChatRoom extends Component {
       getToken, joinChannel, leaveChannel, props,
     } = this;
     const { socket } = props;
-    const { name, chatId } = socket;
-    console.log('socket ID: ', chatId);
+    const { name } = socket;
     const token = await getToken();
     const client = await Client.create(token);
     this.setState({
@@ -37,7 +36,6 @@ export default class ChatRoom extends Component {
     const channels = await client.getSubscribedChannels();
     channels.items.forEach((channel) => leaveChannel(channel));
     client.on('channelJoined', async (channel) => {
-      console.log('You joined channel: ', channel);
       const messages = await channel.getMessages();
       this.setState({ messages: messages.items || [] });
     });
@@ -47,22 +45,20 @@ export default class ChatRoom extends Component {
     } catch (err) {
       console.error('Chatroom could not load: ', err);
     }
-    socket.on('createTeamChatRoom', async ({ teamName, clueGiver, drawer }) => {
-      if (clueGiver.name === name) {
+    socket.on('createTeamChatRoom', async ({ teamName, drawer }) => {
+      try {
+        await client.getChannelByUniqueName(teamName);
+        socket.emit('teamChatReady', { teamName, drawer });
+        joinChannel(channel);
+      } catch {
         try {
-          const channel = await client.getChannelByUniqueName(teamName);
-          console.log('somehow the room exists');
-          socket.emit('teamChatReady', teamName);
-        } catch {
-          try {
-            const channel = await client.createChannel({
-              uniqueName: teamName,
-            });
-            console.log(`${name} created a new channel:`, channel);
-            socket.emit('teamChatReady', teamName);
-          } catch (err) {
-            console.error('Chatroom could not load: ', err);
-          }
+          const channel = await client.createChannel({
+            uniqueName: teamName,
+          });
+          socket.emit('teamChatReady', { teamName, drawer });
+          joinChannel(channel);
+        } catch (err) {
+          console.error('Chatroom could not load: ', err);
         }
       }
     });
@@ -126,7 +122,6 @@ export default class ChatRoom extends Component {
       this.setState({
         channel,
       });
-      console.log('The state channel is: ', this.state.channel);
       this.state.channel.on('messageAdded', handleMessageAdded);
     } catch (err) {
       console.error('Chatroom could not load: ', err);

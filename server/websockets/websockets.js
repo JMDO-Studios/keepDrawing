@@ -68,7 +68,7 @@ function createActiveGameObject(gameName, lobbyRoster) {
         team.drawer = { id, name };
         socket.role = 'drawer';
       } else {
-        game.teams[teamName].clueGiver = { id, name };
+        team.clueGiver = { id, name };
         socket.role = 'clueGiver';
       }
       socket.gameRoom = gameName;
@@ -80,7 +80,7 @@ function createActiveGameObject(gameName, lobbyRoster) {
         io.to(id).emit('goToGame');
         socket.leave('lobby');
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   }
@@ -111,13 +111,9 @@ function joinLobby(socket) {
           clueGiver: team.clueGiver,
           teams: allTeams,
         });
-        io.to(teamName).emit('createTeamChatRoom', {
+        io.to(team.clueGiver.id).emit('createTeamChatRoom', {
           teamName,
-          clueGiver: team.clueGiver,
           drawer: team.drawer,
-        });
-        socket.on('teamChatReady', (readyTeam) => {
-          io.to(readyTeam).emit('joinTeamChat', readyTeam);
         });
       });
       io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
@@ -127,8 +123,11 @@ function joinLobby(socket) {
 
 async function websocketLogic(socket) {
   socket.on('disconnect', () => {
-    console.log('a user disconnected', socket.id);
     socket.to(socket.teamRoom).emit('teammate disconnected');
+  });
+
+  socket.on('teamChatReady', ({ teamName, drawer }) => {
+    io.to(drawer.id).emit('joinTeamChat', teamName);
   });
 
   socket.on('leave game', () => {
@@ -144,15 +143,16 @@ async function websocketLogic(socket) {
   socket.on('chat message', (message) => {
     io.to('lobby').emit('chat message', message);
   });
+
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
   });
+
   socket.on('submitDrawing', ({ gameRoom, teamRoom, drawing }) => {
     const teamState = activeGames[gameRoom].teams[teamRoom];
     const currentClue = teamState.currentClueURL;
     const difference = parseFloat(getDiff(drawing, currentClue.data).misMatchPercentage);
     const scaledDifference = scale(100 - difference, 100 - currentClue.differenceFromBlank, 100, 0, 100);
-    console.log('scaled difference', scaledDifference);
     const clueURL = generateRandomURL(clueURLs);
     teamState.currentClueURL = clueURL;
     if (scaledDifference > 0) {
