@@ -135,10 +135,12 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
-  const mesh = MeshBuilder.CreatePlane(type,
-    { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
-    scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15,
+  const mesh = MeshBuilder.CreatePlane(type, {
+    width: meshWidth,
+    height: scaledHeight,
+    sideOrientation: Mesh.DOUBLESIDE }, scene);
+  const meshPositionX = type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15;
+  mesh.position = new Vector3(meshPositionX,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -232,6 +234,7 @@ function redrawTexture(mesh, newURL) {
 
 function addDrawingObservable(instance, scene, drawingMesh, socket) {
   instance.drawingObservable = scene.onBeforeRenderObservable.add(() => {
+    console.log('getting local canvas');
     const drawingImage = document.getElementById('drawingCanvas');
     const drawingImageURL = drawingImage.toDataURL();
     if (drawingImageURL !== instance.lastSentDrawingURL) {
@@ -379,6 +382,8 @@ export default class Game extends React.Component {
 
     // change texture of clue when receiving image data
     socket.on('new clue', ({ clueURL }) => {
+      this.drawingFunctions[2].click(); // stop drawing
+      this.drawingFunctions[0].click(); // clear drawing
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
         this.submitButton.dispose(true, true);
@@ -393,7 +398,7 @@ export default class Game extends React.Component {
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
         redrawTexture(this.clueMesh, clueURL);
-        this.submitButton = createSubmitButton(drawingMesh, this, scene, this.buttonManager);
+        this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
         this.drawingPanel.dispose();
       }
     });
