@@ -4,7 +4,7 @@ class Lobby extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      player: {},
+      player: { name: props.name },
     };
     this.save = this.save.bind(this);
   }
@@ -40,7 +40,7 @@ class Lobby extends Component {
               />
             </label>
             <button type="submit" className="lobby-button"> submit </button>
-            <p className ='lobby-status'>{message}</p>
+            <p className="lobby-status">{message}</p>
           </form>
         </div>
       </div>

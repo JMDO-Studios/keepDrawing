@@ -77,14 +77,14 @@ function createScoreDisplay(teamNames, parent) {
 function initializeScores(labelText, scores, teamName, parent) {
   scores[teamName] = { score: 0, names: labelText };
   scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
-  //emit something to send the other team our score?
+  // emit something to send the other team our score?
 }
 
 function updateScore(teamName, newScore, scores) {
   const teamScore = scores[teamName];
   teamScore.score = newScore;
   teamScore.scoreDisplay.text = `${newScore}`;
-  //emit something to send the other team out score?
+  // emit something to send the other team out score?
 }
 
 function initializeScene(canvas) {
@@ -101,7 +101,7 @@ function createGround(scene) {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.checkCollisions = true;
   const groundMat = new StandardMaterial('groundMat');
-  groundMat.diffuseTexture = new Texture('https://www.babylonjs-playground.com/textures/grass.dds', scene);
+  groundMat.diffuseTexture = new Texture('https://doc.babylonjs.com/_next/image?url=%2Fimg%2Fresources%2Ftextures_thumbs%2Falbedo.png.jpg&w=1920&q=75', scene);
   ground.material = groundMat;
 
   return ground;
@@ -126,6 +126,7 @@ function createTeammate(scene) {
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 0.5 }, scene);
   sphere.checkCollisions = true;
   sphere.position = new Vector3(0, 1, 2);
+  sphere.isVisible = false;
 
   return sphere;
 }
@@ -274,7 +275,7 @@ export default class Game extends React.Component {
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
-    //this function makes the game go full screen
+    // this function makes the game go full screen
     // openFullscreen (canvas);
 
     // create babylon engine, build and customize scene
@@ -357,7 +358,7 @@ export default class Game extends React.Component {
       Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
           // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          const label = `Team ${idx+1}`;
+          const label = `Team ${idx + 1}`;
           initializeScores(label, scores, team, grid);
         }
       });
@@ -417,8 +418,10 @@ export default class Game extends React.Component {
           timer.text = String(Math.round(count));
         }
         if (count <= 0 && runCount < 1) {
+          scene.onBeforeRenderObservable.remove(this.drawingObservable);
+
           let result = 'You Won!';
-          timer.text = 'BOOM!';
+          timer.text = '0';
           if (this.clueMesh.id === 'clue') this.submitButton.dispose(true, true);
           // compare your points against other teams in scores object to determine who won
           for (const team in scores) {
@@ -446,7 +449,7 @@ export default class Game extends React.Component {
           // replace drawingMesh with button
           const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
           // create button for return to waiting room
-          const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
+          const button1 = Button.CreateSimpleButton('but1', 'Find a New Game');
           button1.width = '225px';
           button1.height = '75px';
           button1.color = 'black';
@@ -468,7 +471,7 @@ export default class Game extends React.Component {
     socket.on('teammate disconnected', () => {
       const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
       if (response) {
-        console.log('go to waiting room')
+        console.log('go to waiting room');
         const { returnToWaitingRoom } = this.props;
         returnToWaitingRoom(false);
       }
