@@ -2,18 +2,18 @@ require('dotenv').config();
 const webpack = require('webpack');
 
 module.exports = {
-  entry: ["./client/index.jsx"],
+  entry: ['./client/index.jsx'],
   output: {
     path: __dirname,
-    filename: "./public/bundle.js",
+    filename: './public/bundle.js',
   },
   resolve: {
-    extensions: [".js", ".jsx"],
+    extensions: ['.js', '.jsx'],
     fallback: {
       crypto: false,
     },
   },
-  devtool: "source-map",
+  devtool: 'source-map',
   watchOptions: {
     ignored: /node_modules/,
   },
@@ -22,14 +22,14 @@ module.exports = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: "babel-loader",
+        loader: 'babel-loader',
         options: {
-          presets: ["@babel/preset-react"],
+          presets: ['@babel/preset-react'],
         },
       },
       {
         test: /\.css$/i,
-        use: ["style-loader", "css-loader"],
+        use: ['style-loader', 'css-loader'],
       },
     ],
   },
