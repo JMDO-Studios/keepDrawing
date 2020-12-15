@@ -101,7 +101,7 @@ function createGround(scene) {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.checkCollisions = true;
   const groundMat = new StandardMaterial('groundMat');
-  groundMat.diffuseTexture = new Texture('https://www.babylonjs-playground.com/textures/grass.dds', scene);
+  groundMat.diffuseTexture = new Texture('https://doc.babylonjs.com/_next/image?url=%2Fimg%2Fresources%2Ftextures_thumbs%2Falbedo.png.jpg&w=1920&q=75', scene);
   ground.material = groundMat;
 
   return ground;
@@ -126,6 +126,7 @@ function createTeammate(scene) {
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 0.5 }, scene);
   sphere.checkCollisions = true;
   sphere.position = new Vector3(0, 1, 2);
+  sphere.isVisible = false;
 
   return sphere;
 }
@@ -134,10 +135,13 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
-  const mesh = MeshBuilder.CreatePlane(type,
-    { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
-    scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15,
+  const mesh = MeshBuilder.CreatePlane(type, {
+    width: meshWidth,
+    height: scaledHeight,
+    sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
+  const meshPositionX = type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15;
+  mesh.position = new Vector3(meshPositionX,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -225,8 +229,13 @@ function createDrawingControlPanel(parent, guiManager, controls) {
   return panel;
 }
 
-function redrawTexture(mesh, newURL) {
-  mesh.material.opacityTexture.updateURL(newURL);
+async function redrawTexture(mesh, newURL, scene) {
+  const newTexture = new Texture(newURL, scene, true, true, null, () => {
+    const oldTexture = mesh.material.opacityTexture;
+    mesh.material.opacityTexture = newTexture;
+    mesh.material.opacityTexture.hasAlpha = true;
+    oldTexture.dispose();
+  });
 }
 
 function addDrawingObservable(instance, scene, drawingMesh, socket) {
@@ -234,7 +243,7 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
     const drawingImage = document.getElementById('drawingCanvas');
     const drawingImageURL = drawingImage.toDataURL();
     if (drawingImageURL !== instance.lastSentDrawingURL) {
-      redrawTexture(drawingMesh, drawingImageURL);
+      redrawTexture(drawingMesh, drawingImageURL, scene);
       instance.lastSentDrawingURL = drawingImageURL;
       socket.emit('drawingChanged', {
         imageData: drawingImageURL,
@@ -364,12 +373,9 @@ export default class Game extends React.Component {
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      redrawTexture(drawingMesh, drawingURL);
+      redrawTexture(drawingMesh, drawingURL, scene);
       this.lastReceivedDrawingURL = drawingURL;
     });
-
-    // share resemblejs results with team
-    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {
@@ -378,6 +384,8 @@ export default class Game extends React.Component {
 
     // change texture of clue when receiving image data
     socket.on('new clue', ({ clueURL }) => {
+      this.drawingFunctions[0].click(); // clear drawing
+      this.drawingFunctions[2].click(); // stop drawing
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
         this.submitButton.dispose(true, true);
@@ -391,8 +399,8 @@ export default class Game extends React.Component {
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        redrawTexture(this.clueMesh, clueURL);
-        this.submitButton = createSubmitButton(drawingMesh, this, scene, this.buttonManager);
+        redrawTexture(this.clueMesh, clueURL, scene);
+        this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
         this.drawingPanel.dispose();
       }
     });
@@ -404,7 +412,7 @@ export default class Game extends React.Component {
       const { currentClueURL } = teamInfo;
       const { returnToWaitingRoom } = this.props;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data, scene);
       let runCount = 0;
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
@@ -416,8 +424,10 @@ export default class Game extends React.Component {
           timer.text = String(Math.round(count));
         }
         if (count <= 0 && runCount < 1) {
+          scene.onBeforeRenderObservable.remove(this.drawingObservable);
+
           let result = 'You Won!';
-          timer.text = 'BOOM!';
+          timer.text = '0';
           if (this.clueMesh.id === 'clue') this.submitButton.dispose(true, true);
           // compare your points against other teams in scores object to determine who won
           for (const team in scores) {
@@ -445,7 +455,7 @@ export default class Game extends React.Component {
           // replace drawingMesh with button
           const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
           // create button for return to waiting room
-          const button1 = Button.CreateSimpleButton('but1', 'Return To Waiting Room');
+          const button1 = Button.CreateSimpleButton('but1', 'Find a New Game');
           button1.width = '225px';
           button1.height = '75px';
           button1.color = 'black';
@@ -467,7 +477,6 @@ export default class Game extends React.Component {
     socket.on('teammate disconnected', () => {
       const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
       if (response) {
-        console.log('go to waiting room');
         const { returnToWaitingRoom } = this.props;
         returnToWaitingRoom(false);
       }

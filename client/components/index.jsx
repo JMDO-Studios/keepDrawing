@@ -32,7 +32,10 @@ export default class Routes extends Component {
     this.handleStatusChange = this.handleStatusChange.bind(this);
     this.returnToWaitingRoom = this.returnToWaitingRoom.bind(this);
     this.changeName = this.changeName.bind(this);
-    // this.createSocket = this.createSocket.bind(this);
+  }
+
+  componentDidMount() {
+    this.startGame();
   }
 
   handleStatusChange(status, name = this.state.name) {
@@ -43,12 +46,15 @@ export default class Routes extends Component {
   }
 
   createSocket(name) {
-    const socket = io();
-    socket.name = name;
-    socket.on('disconnect', () => {
-      window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
-      this.returnToWaitingRoom(true);
-    });
+    let { socket } = this.state;
+    if (!this.state.socket) {
+      socket = io();
+      socket.name = name;
+      socket.on('disconnect', () => {
+        window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
+        this.returnToWaitingRoom(true);
+      });
+    }
     return socket;
   }
 
@@ -60,7 +66,7 @@ export default class Routes extends Component {
     const { socket } = this.state;
     if (reconnect) socket.open();
     else socket.emit('leave game');
-    this.handleStatusChange('waiting room');
+    this.handleStatusChange('lobby');
   }
 
   startVideo() {
@@ -84,16 +90,15 @@ export default class Routes extends Component {
   }
 
   render() {
-    this.startGame();
     const {
       handleStatusChange, returnToWaitingRoom, state, changeName,
     } = this;
     const {
-      status, isVideo, message, socket,
+      status, isVideo, message, socket, name,
     } = state;
     if (status === 'lobby') {
       return (
-        <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} />
+        <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} name={name} />
       );
     }
     if (status === 'waiting room' && !!socket) {

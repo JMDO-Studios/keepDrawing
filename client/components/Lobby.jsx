@@ -4,7 +4,7 @@ class Lobby extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      player: {},
+      player: { name: props.name },
     };
     this.save = this.save.bind(this);
   }
