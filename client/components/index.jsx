@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import io from 'socket.io-client';
 import * as handTrack from 'handtrackjs';
 import AudioChat from '../twilio/AudioChat';
+import ChatRoom from '../twilio/ChatRoom';
 import DrawingGame from './DrawingGame';
 import Lobby from './Lobby';
 import Waitingroom from './Waitingroom';
@@ -98,7 +99,10 @@ export default class Routes extends Component {
     }
     if (status === 'waiting room' && !!socket) {
       return (
-        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+        <div className="mainAndChat">
+          <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+          <ChatRoom socket={socket} />
+        </div>
       );
     }
     if (status === 'game' && !!socket) {
@@ -106,6 +110,7 @@ export default class Routes extends Component {
         <div>
           <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
           <AudioChat socket={socket} />
+          <ChatRoom socket={socket} />
         </div>
       );
     }

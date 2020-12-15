@@ -55,7 +55,7 @@ export default class DrawingGame extends Component {
     const { socket, returnToWaitingRoom } = this.props;
     runDetection();
     return (
-      <div>
+      <div id="drawing-game">
         <ThreeDScene socket={socket} returnToWaitingRoom={returnToWaitingRoom} handleButton={handleButton} clearCanvas={clearCanvas} />
       </div>
     );

@@ -60,7 +60,7 @@ export default class AudioChat extends Component {
       audioRoom.on('participantConnected', (participant) => participantConnected(participant));
       audioRoom.on('participantDisconnected', (participant) => participantDisconnected(participant));
     } catch (err) {
-      console.error('Twilio audio chat could not load:', err);
+      console.error('Could not connect to audio chat: ', err);
     }
   }
 

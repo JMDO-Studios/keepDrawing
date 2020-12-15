@@ -4,7 +4,7 @@ class Waitingroom extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      message: '',
+      // message: '',
       messages: [`welcome ${this.props.socket.name}`],
     };
     this.editMessage = this.editMessage.bind(this);
@@ -47,7 +47,7 @@ class Waitingroom extends Component {
     return (
       <div>
         <h1>Waiting Room</h1>
-        <div id="wait">
+        {/* <div id="wait">
           <ul id="messages">
             {messages.map((m, i) => <li key={i}>{m}</li>)}
           </ul>
@@ -65,7 +65,7 @@ class Waitingroom extends Component {
             />
           </form>
           <div>Press Enter</div>
-        </div>
+        </div> */}
       </div>
     );
   }

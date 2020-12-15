@@ -20,7 +20,7 @@ router.post('/token', (req, res) => {
       token: token.toJwt(),
     });
   } catch (err) {
-    console.error('Twilio audio chat could not load: ', err);
+    console.error('Could not connect to audio chat: ', err);
   }
 });
 

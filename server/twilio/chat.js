@@ -23,7 +23,7 @@ router.post('/token', (req, res) => {
       token: token.toJwt(),
     });
   } catch (err) {
-    console.error('Twilio chatroom could not load: ', err);
+    console.error('Chatroom could not load: ', err);
   }
 });
 

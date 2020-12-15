@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { Twilio } from 'twilio';
+import { Client } from 'twilio-chat/lib';
 import ChatItem from './ChatItem';
 
 export default class ChatRoom extends Component {
@@ -9,6 +9,7 @@ export default class ChatRoom extends Component {
     this.state = {
       text: '',
       messages: [],
+      client: null,
       channel: null,
     };
     this.handleMessageAdded = this.handleMessageAdded.bind(this);
@@ -16,17 +17,54 @@ export default class ChatRoom extends Component {
     this.sendMessage = this.sendMessage.bind(this);
     this.getToken = this.getToken.bind(this);
     this.joinChannel = this.joinChannel.bind(this);
+    this.leaveChannel = async (channel) => {
+      await channel.leave();
+    };
   }
 
   async componentDidMount() {
-    const { getToken } = this;
+    const { getToken, joinChannel, leaveChannel, props } = this;
+    const { socket } = props;
     const token = await getToken();
-    const client = await Twilio.Chat.Client.create(token);
+    const client = await Client.create(token);
+    this.setState({
+      client,
+    });
     client.on('channelJoined', async (channel) => {
       console.log('You joined channel: ', channel);
       const messages = await channel.getMessages();
       this.setState({ messages: messages.items || [] });
     });
+    if (socket.teamName) {
+      try {
+        const channel = await client.getChannelByUniqueName(socket.teamName);
+        joinChannel(channel);
+      } catch {
+        try {
+          const channel = await client.createChannel({
+            uniqueName: socket.teamName,
+            friendlyName: socket.teamName,
+          });
+          joinChannel(channel);
+        } catch (err) {
+          console.error('Chatroom could not load: ', err);
+        }
+      }
+    } else {
+      try {
+        const channel = await client.getChannelByUniqueName('general');
+        joinChannel(channel);
+      } catch (err) {
+        console.error('Chatroom could not load: ', err);
+      }
+    }
+  }
+
+  async componentWillUnmount() {
+    const { leaveChannel, state } = this;
+    const { client } = state;
+    const channels = await client.getSubscribedChannels();
+    channels.items.forEach((channel) => leaveChannel(channel));
   }
 
   handleMessageAdded(message) {
@@ -36,9 +74,20 @@ export default class ChatRoom extends Component {
     });
   }
 
+  async getToken() {
+    try {
+      const { socket } = this.props;
+      const { data } = await axios.post('/twilio/chat/token', { identity: socket.name });
+      return data.token;
+    } catch (err) {
+      console.error('Chatroom could not load: ', err);
+    }
+    return null;
+  }
+
   changeText(ev) {
     this.setState({
-      text: ev.value,
+      text: ev.target.value,
     });
   }
 
@@ -52,43 +101,38 @@ export default class ChatRoom extends Component {
     }
   }
 
-  async getToken() {
-    try {
-      const { socket } = this.props;
-      const { data } = await axios.post('/twilio/chat/token', { identity: socket.name });
-      return data.token;
-    } catch (err) {
-      console.error('Twilio chatroom could not load: ', err);
-    }
-  }
-
   async joinChannel(channel) {
-    if (channel.channelState.status !== 'joined') {
-      await channel.join();
+    try {
+      const { handleMessageAdded } = this;
+      if (channel.channelState.status !== 'joined') {
+        await channel.join();
+      }
+      this.setState({
+        channel,
+      });
+      console.log('The state channel is: ', this.state.channel);
+      this.state.channel.on('messageAdded', handleMessageAdded);
+    } catch (err) {
+      console.error('Chatroom could not load: ', err);
     }
-    this.setState({
-      channel,
-    });
-    channel.on('messageAdded', this.handleMessageAdded);
   }
 
   render() {
     const {
-      joinChannel, changeText, sendMessage, props, state,
+      changeText, sendMessage, props, state,
     } = this;
-    const { socket, status } = props;
+    const { socket } = props;
     const { messages } = state;
-    if (status) {
-      joinChannel(status);
-    }
     return (
-      <div className="chat-window">
-        <div className="message-list">
+      <div id="chat-window">
+        <div id="chat-title">Chat Room</div>
+        <div id="message-list">
           {messages ? messages.map((message) => <ChatItem key={message.index} message={message} participant={socket.name} />)
             : null}
         </div>
-        <div className="textEntry">
-          <textarea rows={2} onChange={changeText} placeholder="Type message here" />
+        <div id="create-message">
+          <textarea id="message-draft" rows={2} onChange={changeText} placeholder="Type message here" />
+          <button id="message-send" type="button" aria-label="Send message" onClick={sendMessage}>Send</button>
         </div>
       </div>
     );

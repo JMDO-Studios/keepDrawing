@@ -101,16 +101,44 @@ a{
 
 /* testing for chat */
 
+#drawing-game {
+  height: 70vh;
+}
+
 #chat-window {
-  background-color: rgba(255,255,255,0.7);
-  height: 50%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  height: 25vh;
 }
-#container {
-  height: 85vh;
+
+#chat-title {
+  font-weight: bold;
+  min-height: 10%;
 }
-#header {
-  margin: auto;
+
+#message-list {
+  border: 1px solid black;
+  min-height: 70%;
+  overflow-y: scroll;
 }
+
+#create-message {
+  display: flex;
+  border: 1px solid black;
+  min-height: 20%;
+}
+
+#message-draft {
+  width: 70%;
+  height: 100%
+}
+
+#message-send {
+  width: 30%;
+  height: 100%
+}
+
 #input-div {
   background-color: #DED4D3;
   height: 5%;
@@ -125,9 +153,6 @@ a{
 #typing-placeholder {
   height: 100%;
   padding-left: 10px;
-}
-#message-list {
-  overflow-y: scroll;
 }
 
 #input-text {
