@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable react/prop-types */
 /* eslint-disable no-lonely-if */
 /* eslint-disable guard-for-in */
 /* eslint-disable no-restricted-syntax */
@@ -77,14 +79,12 @@ function createScoreDisplay(teamNames, parent) {
 function initializeScores(labelText, scores, teamName, parent) {
   scores[teamName] = { score: 0, names: labelText };
   scores[teamName].scoreDisplay = createScoreDisplay(scores[teamName].names, parent);
-  //emit something to send the other team our score?
 }
 
 function updateScore(teamName, newScore, scores) {
   const teamScore = scores[teamName];
   teamScore.score = newScore;
   teamScore.scoreDisplay.text = `${newScore}`;
-  //emit something to send the other team out score?
 }
 
 function initializeScene(canvas) {
@@ -218,7 +218,6 @@ function createDrawingControlPanel(parent, guiManager, controls) {
   guiManager.addControl(panel);
   panel.linkToTransformNode(parent);
   panel.position.y += heightRatio / 4;
-  // panel.position.x += 0.7;
   panel.position.x += -0.65;
   panel.scaling.y = heightRatio;
   populateControlButtons(panel, controls);
@@ -274,7 +273,7 @@ export default class Game extends React.Component {
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
-    //this function makes the game go full screen
+    // this function makes the game go full screen
     // openFullscreen (canvas);
 
     // create babylon engine, build and customize scene
@@ -298,7 +297,7 @@ export default class Game extends React.Component {
     const { teammate } = this;
 
     this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
-    const { drawingMesh, clueMesh } = this;
+    const { drawingMesh } = this;
 
     // initialize plane texture URLs
     this.currentClueURL = '';
@@ -357,7 +356,7 @@ export default class Game extends React.Component {
       Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
           // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          const label = `Team ${idx+1}`;
+          const label = `Team ${idx + 1}`;
           initializeScores(label, scores, team, grid);
         }
       });
@@ -468,7 +467,7 @@ export default class Game extends React.Component {
     socket.on('teammate disconnected', () => {
       const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
       if (response) {
-        console.log('go to waiting room')
+        console.log('go to waiting room');
         const { returnToWaitingRoom } = this.props;
         returnToWaitingRoom(false);
       }
