@@ -382,8 +382,8 @@ export default class Game extends React.Component {
 
     // change texture of clue when receiving image data
     socket.on('new clue', ({ clueURL }) => {
-      this.drawingFunctions[2].click(); // stop drawing
       this.drawingFunctions[0].click(); // clear drawing
+      this.drawingFunctions[2].click(); // stop drawing
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
         this.submitButton.dispose(true, true);
