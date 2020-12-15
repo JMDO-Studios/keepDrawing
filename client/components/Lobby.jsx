@@ -46,19 +46,20 @@ class Lobby extends Component {
         </div>
         <div>
           <h3>SetUp Instructions:</h3>
-          <p>When instructed, enter a username and press submit to join the waiting room</p>
-          <p>Once there enough players in the wiating room, you will automatically be re-directed to the game</p>
+          <p>When instructed, enter a username and press submit</p>
+          <p>Once there enough players you will automatically go to the game</p>
 
           <h3>Gameplay Instruction:</h3>
           <p>There are two players on a team</p>
           <p>The game is timed.</p>
-          <p>One player is the Clue Giver and the other is the Drawer. Roles switch after each image</p>
-          <p>Use hand motions to draw images on the canvas.</p>
-          <p>The Clue Giver can see the expected image and they will have to describe to their teammate what to draw.</p>
-          <p>Utilize the buttons on the screen to start drawing, stop drawing, erase a specific area or clear the whole canvas.</p>
-          <p>The Clue Giver can hit the submit button when they are ready to have their drawing scored and move onto the next clue.</p>
-          <p>The closer your drawing is to the clue, the more points you will receive.</p>
-          <p>The team with the most points when the timer runs out is the winner.</p>
+          <p>Teams consist of a Clue Giver and a Drawer</p>
+          <p>Roles switch after each image</p>
+          <p>Use hand motions to draw images on the canvas</p>
+          <p>The Clue Giver will describe to their teammate what to draw</p>
+          <p>Use the buttons to start or stop drawing, erase, and clear</p>
+          <p>The Clue Giver can submit their attempt to be scored and move on</p>
+          <p>The closer your drawing is to the clue, the more points you will receive</p>
+          <p>The team with the most points when the timer runs out is the winner</p>
         </div>
       </div>
     );
