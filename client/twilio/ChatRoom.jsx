@@ -47,22 +47,22 @@ export default class ChatRoom extends Component {
     } catch (err) {
       console.error('Chatroom could not load: ', err);
     }
-    socket.on('initialize', async ({ teamName, drawer }) => {
-      try {
-        const channel = await client.getChannelByUniqueName(teamName);
-        joinChannel(channel);
-      } catch {
-        try {
-          const channel = await client.createChannel({
-            uniqueName: teamName,
-            friendlyName: teamName,
-          });
-          joinChannel(channel);
-        } catch (err) {
-          console.error('Chatroom could not load: ', err);
-        }
-      }
-    });
+    // socket.on('initialize', async ({ teamName, drawer }) => {
+    //   try {
+    //     const channel = await client.getChannelByUniqueName(teamName);
+    //     joinChannel(channel);
+    //   } catch {
+    //     try {
+    //       const channel = await client.createChannel({
+    //         uniqueName: teamName,
+    //         friendlyName: teamName,
+    //       });
+    //       joinChannel(channel);
+    //     } catch (err) {
+    //       console.error('Chatroom could not load: ', err);
+    //     }
+    //   }
+    // });
   }
 
   async componentWillUnmount() {

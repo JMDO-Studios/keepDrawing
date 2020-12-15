@@ -75,12 +75,9 @@ export default class AudioChat extends Component {
     const { socket } = props;
     const { teamName } = socket;
     const { audioRoom, remoteParticipants } = state;
-    console.log('audio room: ', audioRoom);
     if (teamName && audioRoom === null) {
-      console.log('when do we try to join the AudioChat in the render?');
       joinAudioChat(teamName);
     }
-    console.log('participants: ', remoteParticipants);
     return (
       <div>
         {remoteParticipants.map((participant) => (

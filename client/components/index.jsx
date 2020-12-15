@@ -48,18 +48,18 @@ export default class Routes extends Component {
   }
 
   createSocket(name) {
-    // let { socket } = this.state;
-    if (!this.state.socket) {
-      const socket = io();
-      socket.name = name;
-      socket.chatId = uuidv4();
-      socket.on('disconnect', () => {
+    const { socket } = this.state;
+    if (!socket) {
+      const newSocket = io();
+      newSocket.name = name;
+      newSocket.chatId = uuidv4();
+      newSocket.on('disconnect', () => {
         window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
         this.returnToWaitingRoom(true);
       });
-      return socket;
+      return newSocket;
     }
-    return this.state.socket;
+    return socket;
   }
 
   changeName(name) {
