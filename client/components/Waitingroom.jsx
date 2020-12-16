@@ -5,7 +5,7 @@ class Waitingroom extends Component {
     super(props);
     this.state = {
       message: '',
-      messages: [`welcome ${this.props.socket.name}`],
+      messages: [`Welcome, ${this.props.socket.name}!`],
     };
     this.editMessage = this.editMessage.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
