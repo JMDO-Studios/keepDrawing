@@ -6,8 +6,8 @@ class Waitingroom extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      playersWaiting: [],
-      playersNeeded: bombGameSettings.gameSize,
+      message: '',
+      messages: [`Welcome, ${this.props.socket.name}!`],
     };
   }
 
