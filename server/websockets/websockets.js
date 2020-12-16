@@ -91,9 +91,10 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-function joinLobby(socket) {
+function joinLobby(socket, name) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
+  io.to('lobby').emit('joined lobby', { name, size: lobbyRoster.size, total: bombGameSettings.gameSize });
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
     setTimeout(() => {
@@ -139,11 +140,11 @@ async function websocketLogic(socket) {
 
   socket.on('change name', ({ name }) => {
     socket.name = name;
-    joinLobby(socket);
+    joinLobby(socket, name);
   });
 
-  socket.on('chat message', (message) => {
-    io.to('lobby').emit('chat message', message);
+  socket.on('chat message', ({ message, name }) => {
+    io.to('lobby').emit('chat message', {message, name});
   });
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
