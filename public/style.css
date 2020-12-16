@@ -120,3 +120,106 @@ a{
 .nav-lobby {
   color: dodgerblue;
 }
+
+/* testing for chat */
+
+#drawing-game {
+  height: 70vh;
+}
+
+#chat-window {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  height: 25vh;
+}
+
+#chat-title {
+  font-weight: bold;
+  min-height: 20%;
+  color: white;
+  background-color: dodgerblue;
+}
+
+#message-list {
+  border: 1px solid black;
+  min-height: 65%;
+  overflow-y: scroll;
+}
+
+#create-message {
+  display: flex;
+  border: 1px solid black;
+  min-height: 15%;
+}
+
+#author {
+  font-weight: bold;
+}
+
+#message-draft {
+  width: 70%;
+  height: 100%
+}
+
+#message-send {
+  width: 30%;
+  height: 100%
+}
+
+#input-div {
+  background-color: #DED4D3;
+  height: 5%;
+}
+#typing-row {
+  height: 3%;
+  font-weight: lighter;
+  font-size: small;
+  color: #BBA0A1;
+  vertical-align: bottom;
+}
+#typing-placeholder {
+  height: 100%;
+  padding-left: 10px;
+}
+
+#input-text {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1%;
+  height: 100%;
+  width: 100%;
+  background-color: #DED4D3;
+  color: #644F52;
+  font-weight: 300;
+  border: 0;
+  resize: none;
+}
+.with-shadow {
+  -webkit-box-shadow: -5px 5px 0px 0px rgba(0,0,0,0.53);
+  -moz-box-shadow: -5px 5px 0px 0px rgba(0,0,0,0.53);
+  box-shadow: -5px 5px 0px 0px rgba(0,0,0,0.53);
+}
+
+.own-message {
+  background-color: #DDD3D2;
+}
+.message-info-row {
+  padding-top: 0.7vh;
+  padding-bottom: 0.5vh;
+}
+.message-body {
+  word-break: break-all;
+  text-align: justify;
+  text-justify: inter-word;
+  font-size: small;
+  font-weight: 300;
+  color: #644F52;
+}
+.message-username {
+  margin-left: 15px;
+  margin-bottom: 5px;
+  font-size: normal;
+  font-weight: 400;
+  color: #5C5153;
+}

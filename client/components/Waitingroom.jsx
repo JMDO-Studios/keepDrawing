@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+const { bombGameSettings } = require('../../gameSettings');
+
 class Waitingroom extends Component {
   constructor(props) {
     super(props);
@@ -7,8 +9,6 @@ class Waitingroom extends Component {
       message: '',
       messages: [`Welcome, ${this.props.socket.name}!`],
     };
-    this.editMessage = this.editMessage.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
   }
 
   componentDidMount() {
@@ -17,55 +17,23 @@ class Waitingroom extends Component {
     socket.on('goToGame', () => {
       handleStatusChange('game');
     });
-    socket.on('chat message', (msg) => {
-      this.setState({
-        message: msg,
-        messages: [...this.state.messages, msg],
-      });
+    socket.on('helloWorld', () => {
+      console.log('Hello world');
     });
   }
 
-  editMessage(e) {
-    e.preventDefault();
-    this.setState({ message: e.target.value });
-  }
-
-  sendMessage(e) {
-    e.preventDefault();
-    const { message } = this.state;
+  componentWillUnmount() {
     const { socket } = this.props;
-    if (message) {
-      socket.emit('chat message', message);
-    }
-    this.setState({ message: '' });
+    socket.emit('leftWaitingRoom');
   }
 
   render() {
-    const { message, messages } = this.state;
-    const { editMessage, sendMessage } = this;
-
+    const { playersNeeded } = this.state;
     return (
       <div>
         <h1>Waiting Room</h1>
-        <div id="wait">
-          <ul id="messages">
-            {messages.map((m, i) => <li key={i}>{m}</li>)}
-          </ul>
-          <form id="form">
-            <input
-              className="wait-input"
-              id="m"
-              value={message}
-              onChange={editMessage}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  sendMessage(e);
-                }
-              }}
-            />
-          </form>
-          <div>Press Enter</div>
-        </div>
+        <h2>Players in Waiting Room:</h2>
+        <h2>{playersNeeded} more players needed to start</h2>
       </div>
     );
   }
