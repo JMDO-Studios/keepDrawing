@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 
 export default class ChatItem extends Component {
   render() {
-    const { message, participant } = this.props;
+    const { message } = this.props;
     // const isOwnMessage = message.author === participant;
     return (
       <div className="chat-item">

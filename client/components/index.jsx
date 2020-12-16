@@ -111,7 +111,7 @@ export default class Routes extends Component {
     }
     return (
       <div>
-        {status === 'waiting room' && !!socket ? <Waitingroom socket={socket} handleStatusChange={handleStatusChange} /> 
+        {status === 'waiting room' && !!socket ? <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
           : null}
         {status === 'game' && !!socket
           ? (
@@ -121,7 +121,7 @@ export default class Routes extends Component {
             </div>
           )
           : null}
-        <ChatRoom socket={socket} />
+        {/* <ChatRoom socket={socket} /> */}
       </div>
     );
   }

@@ -118,19 +118,25 @@ a{
 
 #chat-title {
   font-weight: bold;
-  min-height: 10%;
+  min-height: 20%;
+  color: white;
+  background-color: dodgerblue;
 }
 
 #message-list {
   border: 1px solid black;
-  min-height: 70%;
+  min-height: 65%;
   overflow-y: scroll;
 }
 
 #create-message {
   display: flex;
   border: 1px solid black;
-  min-height: 20%;
+  min-height: 15%;
+}
+
+#author {
+  font-weight: bold;
 }
 
 #message-draft {

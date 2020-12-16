@@ -85,8 +85,8 @@ export default class ChatRoom extends Component {
   async getToken() {
     try {
       const { socket } = this.props;
-      const { chatId } = socket;
-      const { data } = await axios.post('/twilio/chat/token', { identity: chatId });
+      const { name } = socket;
+      const { data } = await axios.post('/twilio/chat/token', { identity: name });
       return data.token;
     } catch (err) {
       console.error('Chatroom could not load: ', err);
@@ -134,7 +134,7 @@ export default class ChatRoom extends Component {
     } = this;
     const { socket } = props;
     const { name } = socket;
-    const { messages } = state;
+    const { text, messages } = state;
     return (
       <div id="chat-window">
         <div id="chat-title">Chat Room</div>
@@ -143,8 +143,8 @@ export default class ChatRoom extends Component {
             : null}
         </div>
         <div id="create-message">
-          <textarea id="message-draft" rows={2} onChange={changeText} placeholder="Type message here" />
-          <button id="message-send" type="button" aria-label="Send message" onClick={sendMessage}>Send</button>
+          <input type="text" id="message-draft" rows={2} value={text} onChange={changeText} placeholder="Type message here" />
+          <button id="message-send" type="submit" aria-label="Send message">Send</button>
         </div>
       </div>
     );
