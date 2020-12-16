@@ -27,6 +27,8 @@ li {
   display: flex;
   flex-direction: column;
   text-align: left;
+  height: 75vh;
+  overflow-y: auto;
 }
 
 #wait{
