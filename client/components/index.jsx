@@ -73,7 +73,7 @@ export default class Routes extends Component {
     handTrack.startVideo(video)
       .then((status) => {
         if (status) {
-          this.setState({ isVideo: true, message: 'Create Username and Press Submit to Join Waiting Room' });
+          this.setState({ isVideo: true, message: 'Create Username and Press Play to Join Waiting Room' });
         } else {
           this.setState({ message: 'Please enable your video' });
         }
