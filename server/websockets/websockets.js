@@ -97,24 +97,29 @@ function joinLobby(socket, name) {
   io.to('lobby').emit('joined lobby', { name, size: lobbyRoster.size, total: bombGameSettings.gameSize });
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
-    const gameRoomName = uuidv4();
-    createActiveGameObject(gameRoomName, lobbyRoster);
-    socket.leave('lobby');
+    setTimeout(() => {
+      const gameRoomName = uuidv4();
+      createActiveGameObject(gameRoomName, lobbyRoster);
+      socket.leave('lobby');
 
-    Object.keys(activeGames[gameRoomName].teams).forEach((teamName) => {
-      const allTeams = activeGames[gameRoomName].teams;
-      const team = allTeams[teamName];
-      io.to(teamName).emit('initialize', {
-        teamName,
-        gameName: gameRoomName,
-        members: team.members,
-        drawer: team.drawer,
-        clueGiver: team.clueGiver,
-        teams: allTeams,
+      Object.keys(activeGames[gameRoomName].teams).forEach((teamName) => {
+        const allTeams = activeGames[gameRoomName].teams;
+        const team = allTeams[teamName];
+        io.to(teamName).emit('initialize', {
+          teamName,
+          gameName: gameRoomName,
+          members: team.members,
+          drawer: team.drawer,
+          clueGiver: team.clueGiver,
+          teams: allTeams,
+        });
+        io.to(team.clueGiver.id).emit('createTeamChatRoom', {
+          teamName,
+          drawer: team.drawer,
+        });
       });
-    });
-
-    io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
+      io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
+    }, 3000);
   }
 }
 
@@ -127,6 +132,10 @@ async function websocketLogic(socket) {
   socket.on('leave game', () => {
     socket.leave(socket.gameRoom);
     socket.leave(socket.teamRoom);
+  });
+
+  socket.on('teamChatReady', ({ teamName, drawer }) => {
+    io.to(drawer.id).emit('joinTeamChat', teamName);
   });
 
   socket.on('change name', ({ name }) => {

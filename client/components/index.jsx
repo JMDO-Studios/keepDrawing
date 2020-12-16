@@ -2,9 +2,12 @@ import React, { Component } from 'react';
 import io from 'socket.io-client';
 import * as handTrack from 'handtrackjs';
 import AudioChat from '../twilio/AudioChat';
+import ChatRoom from '../twilio/ChatRoom';
 import DrawingGame from './DrawingGame';
 import Lobby from './Lobby';
 import Waitingroom from './Waitingroom';
+
+const { v4: uuidv4 } = require('uuid');
 
 const modelParams = {
   flipHorizontal: true,
@@ -46,14 +49,16 @@ export default class Routes extends Component {
   }
 
   createSocket(name) {
-    let { socket } = this.state;
-    if (!this.state.socket) {
-      socket = io();
-      socket.name = name;
-      socket.on('disconnect', () => {
+    const { socket } = this.state;
+    if (!socket) {
+      const newSocket = io();
+      newSocket.name = name;
+      newSocket.chatId = uuidv4();
+      newSocket.on('disconnect', () => {
         window.alert('You have disconnected from the server.\nPress OK to reconnect and wait to join a new game');
         this.returnToWaitingRoom(true);
       });
+      return newSocket;
     }
     return socket;
   }
@@ -91,29 +96,33 @@ export default class Routes extends Component {
 
   render() {
     const {
-      handleStatusChange, returnToWaitingRoom, state, changeName,
+      startGame, handleStatusChange, returnToWaitingRoom, state, changeName,
     } = this;
     const {
       status, isVideo, message, socket, name,
     } = state;
+    if (!isVideo) {
+      startGame();
+    }
     if (status === 'lobby') {
       return (
         <Lobby changeName={changeName} message={message} handleStatusChange={handleStatusChange} isVideo={isVideo} name={name} />
       );
     }
-    if (status === 'waiting room' && !!socket) {
-      return (
-        <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
-      );
-    }
-    if (status === 'game' && !!socket) {
-      return (
-        <div>
-          <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
-          <AudioChat socket={socket} />
-        </div>
-      );
-    }
-    return null;
+    return (
+      <div>
+        {status === 'waiting room' && !!socket ? <Waitingroom socket={socket} handleStatusChange={handleStatusChange} />
+          : null}
+        {status === 'game' && !!socket
+          ? (
+            <div>
+              <DrawingGame socket={socket} isVideo={isVideo} model={model} video={video} message={message} returnToWaitingRoom={returnToWaitingRoom} />
+              <AudioChat socket={socket} />
+            </div>
+          )
+          : null}
+        {/* <ChatRoom socket={socket} /> */}
+      </div>
+    );
   }
 }
