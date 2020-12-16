@@ -1,12 +1,26 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable react/prop-types */
+/* eslint-disable no-lonely-if */
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
 import React from 'react';
-import '@babylonjs/loaders/glTF';
 import {
-  AdvancedDynamicTexture, Button, TextBlock, Control, Grid,
+  AdvancedDynamicTexture, TextBlock, Control, Grid, StackPanel3D, GUI3DManager, HolographicButton, Button,
 } from '@babylonjs/gui';
 import {
   Engine, Scene, Vector3, HemisphericLight, Mesh, MeshBuilder,
   StandardMaterial, FreeCamera, DynamicTexture, Texture, VideoTexture, Color3, HighlightLayer,
 } from '@babylonjs/core';
+
+function openFullscreen(elem) {
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    elem.msRequestFullscreen();
+  }
+}
 
 function createTextBox(initialText, parent) {
   const canvasHeight = document.getElementById('gameCanvas').height;
@@ -87,7 +101,7 @@ function createGround(scene) {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.checkCollisions = true;
   const groundMat = new StandardMaterial('groundMat');
-  groundMat.diffuseTexture = new Texture('https://www.babylonjs-playground.com/textures/grass.dds', scene);
+  groundMat.diffuseTexture = new Texture('https://doc.babylonjs.com/_next/image?url=%2Fimg%2Fresources%2Ftextures_thumbs%2Falbedo.png.jpg&w=1920&q=75', scene);
   ground.material = groundMat;
 
   return ground;
@@ -112,6 +126,7 @@ function createTeammate(scene) {
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 0.5 }, scene);
   sphere.checkCollisions = true;
   sphere.position = new Vector3(0, 1, 2);
+  sphere.isVisible = false;
 
   return sphere;
 }
@@ -120,10 +135,13 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   const { width, height } = document.getElementById('drawingCanvas');
   const meshWidth = 1; // change this value to adjust the mesh size
   const scaledHeight = meshWidth * (height / width);
-  const mesh = MeshBuilder.CreatePlane(type,
-    { width: meshWidth, height: meshWidth * scaledHeight, sideOrientation: Mesh.DOUBLESIDE },
-    scene);
-  mesh.position = new Vector3(type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.1 : sphere.position.x - meshWidth / 2 - 0.1,
+  const mesh = MeshBuilder.CreatePlane(type, {
+    width: meshWidth,
+    height: scaledHeight,
+    sideOrientation: Mesh.DOUBLESIDE,
+  }, scene);
+  const meshPositionX = type === 'drawing' ? sphere.position.x + meshWidth / 2 + 0.15 : sphere.position.x - meshWidth / 2 - 0.15;
+  mesh.position = new Vector3(meshPositionX,
     sphere.position.y + scaledHeight,
     sphere.position.z);
   const material = new StandardMaterial(`${type}Image`, scene);
@@ -143,34 +161,81 @@ function createImagePlane(type, sphere, scene, highlightLayer) {
   return mesh;
 }
 
-function createButtonPlane(type, parent, scene) {
-  const mesh = MeshBuilder.CreatePlane(type,
-    { width: 0.5, height: 0.1, sideOrientation: Mesh.DOUBLESIDE },
-    scene);
-  mesh.position = new Vector3(
-    parent.position.x,
-    parent.position.y - 0.5,
-    parent.position.z,
-  );
-  return mesh;
-}
+function createSubmitButton(parent, instance, socket, guiManager) {
+  const buttonText = new TextBlock('button text', 'Submit');
+  buttonText.color = 'white';
+  buttonText.fontSize = 12;
+  buttonText.fontWeight = 'bold';
+  buttonText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
 
-function createButton(mesh, instance, socket, scene) {
-  const advancedTexture = AdvancedDynamicTexture.CreateForMesh(mesh);
-  const button = Button.CreateSimpleButton('but1', 'Submit', scene);
-  // button.width = 1;
-  button.height = 1;
-  button.color = 'white';
-  button.fontSize = 50;
-  button.background = 'green';
+  const button = new HolographicButton('submitButton');
+  guiManager.addControl(button);
+  button.linkToTransformNode(parent);
+  button.position.y += -0.4;
   button.onPointerUpObservable.add(() => {
     socket.emit('submitDrawing', { gameRoom: socket.gameName, teamRoom: socket.teamName, drawing: instance.lastReceivedDrawingURL });
   });
-  advancedTexture.addControl(button);
+  button.content = buttonText;
+  const [xScale, yScale] = [0.5, 0.1];
+  button.scaling.x = xScale;
+  button.mesh.getChildren()[1].scaling.x = 1 / xScale;
+  button.scaling.y = yScale;
+  button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.scaling.z = 0.5;
+  button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
+
+  return button;
 }
 
-function redrawTexture(mesh, newURL) {
-  mesh.material.opacityTexture.updateURL(newURL);
+function makeControlButton(parent, control) {
+  const buttonText = new TextBlock('button text', control.label);
+  buttonText.color = 'white';
+  buttonText.fontSize = 12;
+  buttonText.fontWeight = 'bold';
+  buttonText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+  const button = new HolographicButton('drawingControl');
+  parent.addControl(button);
+  button.onPointerUpObservable.add(control.click);
+  button.content = buttonText;
+  const [xScale, yScale] = [0.2, 0.1];
+  button.scaling.x = xScale;
+  button.mesh.getChildren()[1].scaling.x = 1 / xScale;
+  button.scaling.y = yScale;
+  button.mesh.getChildren()[1].scaling.y = 1 / yScale;
+  button.scaling.z = 0.5;
+  button.backMaterial.albedoColor = new Color3.FromHexString('#EF7215');
+
+  return button;
+}
+
+function populateControlButtons(panel, controls) {
+  controls.forEach((control) => {
+    makeControlButton(panel, control);
+  });
+}
+
+function createDrawingControlPanel(parent, guiManager, controls) {
+  const heightRatio = 281 / 500;
+  const panel = new StackPanel3D(true);
+  panel.margin = 0.02;
+  guiManager.addControl(panel);
+  panel.linkToTransformNode(parent);
+  panel.position.y += heightRatio / 4;
+  panel.position.x += -0.65;
+  panel.scaling.y = heightRatio;
+  populateControlButtons(panel, controls);
+
+  return panel;
+}
+
+async function redrawTexture(mesh, newURL, scene) {
+  const newTexture = new Texture(newURL, scene, true, true, null, () => {
+    const oldTexture = mesh.material.opacityTexture;
+    mesh.material.opacityTexture = newTexture;
+    mesh.material.opacityTexture.hasAlpha = true;
+    oldTexture.dispose();
+  });
 }
 
 function addDrawingObservable(instance, scene, drawingMesh, socket) {
@@ -178,7 +243,7 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
     const drawingImage = document.getElementById('drawingCanvas');
     const drawingImageURL = drawingImage.toDataURL();
     if (drawingImageURL !== instance.lastSentDrawingURL) {
-      redrawTexture(drawingMesh, drawingImageURL);
+      redrawTexture(drawingMesh, drawingImageURL, scene);
       instance.lastSentDrawingURL = drawingImageURL;
       socket.emit('drawingChanged', {
         imageData: drawingImageURL,
@@ -190,25 +255,45 @@ function addDrawingObservable(instance, scene, drawingMesh, socket) {
 export default class Game extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      socket: props.socket,
-    };
+    this.drawingFunctions = [
+      {
+        label: 'Clear',
+        click: () => props.clearCanvas(),
+      },
+      {
+        label: 'Erase',
+        click: () => props.handleButton(false, true),
+      },
+      {
+        label: 'Stop',
+        click: () => props.handleButton(false, false),
+      },
+      {
+        label: 'Start',
+        click: () => props.handleButton(true, false),
+      },
+    ];
   }
 
   componentDidMount() {
-    const { socket } = this.state;
+    const { socket } = this.props;
 
     // get canvas element
     this.canvas = document.getElementById('gameCanvas');
     const { canvas } = this;
 
+    // this function makes the game go full screen
+    // openFullscreen (canvas);
+
     // create babylon engine, build and customize scene
     [this.engine, this.scene] = initializeScene(canvas);
     const { engine, scene } = this;
 
+    this.buttonManager = new GUI3DManager(scene);
+
     this.light1 = new HemisphericLight('light1', new Vector3(1, 1, 0), scene);
 
-    this.highlightLayer = new HighlightLayer("hl1", scene);
+    this.highlightLayer = new HighlightLayer('hl1', scene);
 
     // create ground plane and assign it a texture
     this.ground = createGround(scene);
@@ -219,6 +304,7 @@ export default class Game extends React.Component {
     // create scene objects
     this.teammate = createTeammate(scene);
     const { teammate } = this;
+
     this.drawingMesh = createImagePlane('drawing', teammate, scene, this.highlightLayer);
     const { drawingMesh } = this;
 
@@ -267,20 +353,19 @@ export default class Game extends React.Component {
       if (socket.role === 'drawer') {
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
       }
       // create your team first so that it always shows up first in list
-      console.log('grid is', grid);
       initializeScores('Your Score', scores, teamName, grid);
 
       // for each team, add their names, score, and submitted clues to HUD
       Object.keys(teams).forEach((team, idx) => {
         if (team !== teamName) {
           // const label = `${teams[team].members[0].name} & ${teams[team].members[1].name}`;
-          const label = `Team ${idx}`;
+          const label = `Team ${idx + 1}`;
           initializeScores(label, scores, team, grid);
         }
       });
@@ -288,12 +373,9 @@ export default class Game extends React.Component {
 
     // change texture of plane when receiving image data
     socket.on('drawingChanged', ({ drawingURL }) => {
-      redrawTexture(drawingMesh, drawingURL);
+      redrawTexture(drawingMesh, drawingURL, scene);
       this.lastReceivedDrawingURL = drawingURL;
     });
-
-    // share resemblejs results with team
-    socket.on('comparisonResults', (payload) => console.log(payload.percent));
 
     // change a team's score and display
     socket.on('update score', ({ teamName, score }) => {
@@ -302,21 +384,24 @@ export default class Game extends React.Component {
 
     // change texture of clue when receiving image data
     socket.on('new clue', ({ clueURL }) => {
+      this.drawingFunctions[0].click(); // clear drawing
+      this.drawingFunctions[2].click(); // stop drawing
       if (socket.role === 'clueGiver') {
         socket.role = 'drawer';
-        this.buttonMesh.dispose(true, true);
+        this.submitButton.dispose(true, true);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('hand', teammate, scene, this.highlightLayer);
         addDrawingObservable(this, scene, drawingMesh, socket);
+        this.drawingPanel = createDrawingControlPanel(this.drawingMesh, this.buttonManager, this.drawingFunctions);
       } else {
         socket.role = 'clueGiver';
         // delete mesh, replace it with appropriate version, add observable
         scene.onBeforeRenderObservable.remove(this.drawingObservable);
         this.clueMesh.dispose(true, true);
         this.clueMesh = createImagePlane('clue', teammate, scene, this.highlightLayer);
-        redrawTexture(this.clueMesh, clueURL);
-        this.buttonMesh = createButtonPlane('submit', drawingMesh, scene);
-        this.submitButton = createButton(this.buttonMesh, this, socket, scene);
+        redrawTexture(this.clueMesh, clueURL, scene);
+        this.submitButton = createSubmitButton(drawingMesh, this, socket, this.buttonManager);
+        this.drawingPanel.dispose();
       }
     });
 
@@ -325,9 +410,10 @@ export default class Game extends React.Component {
       const { time } = gameState;
       const teamInfo = gameState.teams[socket.teamName];
       const { currentClueURL } = teamInfo;
+      const { returnToWaitingRoom } = this.props;
 
-      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data);
-
+      if (socket.role === 'clueGiver') redrawTexture(this.clueMesh, currentClueURL.data, scene);
+      let runCount = 0;
       let count = time;
       scene.onBeforeRenderObservable.add((thisScene) => {
         if (!thisScene.deltaTime) return;
@@ -336,11 +422,64 @@ export default class Game extends React.Component {
         if (count > 0) {
           count -= (thisScene.deltaTime / 1000);
           timer.text = String(Math.round(count));
-        } else timer.text = 'BOOM!';
+        }
+        if (count <= 0 && runCount < 1) {
+          scene.onBeforeRenderObservable.remove(this.drawingObservable);
+
+          let result = 'You Won!';
+          timer.text = '0';
+          if (this.clueMesh.id === 'clue') this.submitButton.dispose(true, true);
+          // compare your points against other teams in scores object to determine who won
+          for (const team in scores) {
+            const currTeam = scores[team];
+            if (currTeam.score > scores[socket.teamName].score) {
+              result = 'You Lost';
+              break;
+            }
+            if (currTeam.score === scores[socket.teamName].score && currTeam.names !== 'Your Score') {
+              result = 'You Tied';
+            }
+          }
+          // replace clue mesh to dsiplay game results
+          const gameResultsTexture = AdvancedDynamicTexture.CreateForMesh(this.clueMesh, 500, 256);
+          // Mesh is flipped to show video correctly. statement below flips the mesh back to normal
+          if (this.clueMesh.id === 'hand') this.clueMesh.rotation.y = 0;
+          const text1 = new TextBlock('hi text');
+          text1.text = `${result}`;
+          text1.width = 1;
+          text1.height = 1;
+          text1.color = 'black';
+          text1.fontSize = 50;
+          text1.textWrapping = true;
+          gameResultsTexture.addControl(text1);
+          // replace drawingMesh with button
+          const buttonTexture = AdvancedDynamicTexture.CreateForMesh(this.drawingMesh, 256, 256);
+          // create button for return to waiting room
+          const button1 = Button.CreateSimpleButton('but1', 'Find a New Game');
+          button1.width = '225px';
+          button1.height = '75px';
+          button1.color = 'black';
+          button1.cornerRadius = 20;
+          button1.background = 'grey';
+          button1.onPointerUpObservable.add(() => {
+            returnToWaitingRoom();
+          });
+          buttonTexture.addControl(button1);
+          runCount += 1;
+        }
       });
     });
     engine.runRenderLoop(() => {
       scene.render();
+    });
+
+    // connectivity error handling
+    socket.on('teammate disconnected', () => {
+      const response = window.confirm('Your teammate has disconnected from the server.\nPress OK to go back to the waiting room or Cancel to continue watching this game');
+      if (response) {
+        const { returnToWaitingRoom } = this.props;
+        returnToWaitingRoom(false);
+      }
     });
   }
 

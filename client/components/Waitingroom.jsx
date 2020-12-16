@@ -5,7 +5,7 @@ class Waitingroom extends Component {
     super(props);
     this.state = {
       message: '',
-      messages: [`welcome ${this.props.socket.name}`],
+      messages: [`Welcome, ${this.props.socket.name}!`],
     };
     this.editMessage = this.editMessage.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
@@ -17,10 +17,16 @@ class Waitingroom extends Component {
     socket.on('goToGame', () => {
       handleStatusChange('game');
     });
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', ({ message, name }) => {
+      const nameAndMessage = `${name}: ${message}`;
       this.setState({
-        message: msg,
-        messages: [...this.state.messages, msg],
+        messages: [...this.state.messages, nameAndMessage],
+      });
+    });
+    socket.on('joined lobby', ({ name, size, total }) => {
+      const message = `${name} has joined the waiting room. Waiting for ${total - size} more players to start the game.`;
+      this.setState({
+        messages: [...this.state.messages, message],
       });
     });
   }
@@ -35,7 +41,7 @@ class Waitingroom extends Component {
     const { message } = this.state;
     const { socket } = this.props;
     if (message) {
-      socket.emit('chat message', message);
+      socket.emit('chat message', { message, name: socket.name });
     }
     this.setState({ message: '' });
   }

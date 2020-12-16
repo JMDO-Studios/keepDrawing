@@ -4,7 +4,7 @@
   "description": "a suite of games based on handtrackjs",
   "main": "index.js",
   "scripts": {
-    "start": "node main",
+    "start": "node index.js",
     "start-dev": "npm run build-watch & npm run start-server",
     "start-server": "nodemon main -e html,js,css --ignore public",
     "build-watch": "webpack -w --mode=\"development\"",
@@ -14,19 +14,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mxavier927/keepDrawing.git"
+    "url": "git+https://github.com/JMDO-Studios/keepDrawing.git"
   },
   "keywords": [
     "handtrack",
     "game",
-    "aframe"
+    "babylonJS",
+    "Twilio"
   ],
   "author": "Jeff Garber, Mark Guinn, Oscar Sanchez, Doug Miller",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mxavier927/keepDrawing/issues"
+    "url": "https://github.com/JMDO-Studios/keepDrawing/issues"
   },
-  "homepage": "https://github.com/mxavier927/keepDrawing#readme",
+  "homepage": "https://github.com/JMDO-Studios/keepDrawing#readMe",
   "dependencies": {
     "@babylonjs/core": "^4.2.0",
     "@babylonjs/gui": "^4.2.0",
@@ -44,6 +45,7 @@
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.3",
     "twilio": "^3.52.0",
+    "twilio-chat": "^4.0.0",
     "twilio-video": "^2.8.0",
     "util": "^0.12.3",
     "uuid": "^8.3.1",

@@ -78,7 +78,6 @@ function createActiveGameObject(gameName, lobbyRoster) {
         socket.join(gameName);
         socket.join(teamName);
         io.to(id).emit('goToGame');
-        console.log(`Socket ${id} is in team ${teamName} in game ${gameName}`);
         socket.leave('lobby');
       } catch (error) {
         console.log(error);
@@ -92,43 +91,60 @@ function deleteGame(gameName) {
   delete activeGames[gameName];
 }
 
-function joinLobby(socket) {
+function joinLobby(socket, name) {
   socket.join('lobby');
   const lobbyRoster = getIdsOfSocketsInRoom('lobby');
+  io.to('lobby').emit('joined lobby', { name, size: lobbyRoster.size, total: bombGameSettings.gameSize });
 
   if (lobbyRoster.size >= bombGameSettings.gameSize) {
-    const gameRoomName = uuidv4();
-    createActiveGameObject(gameRoomName, lobbyRoster);
-    socket.leave('lobby');
+    setTimeout(() => {
+      const gameRoomName = uuidv4();
+      createActiveGameObject(gameRoomName, lobbyRoster);
+      socket.leave('lobby');
 
-    Object.keys(activeGames[gameRoomName].teams).forEach((teamName) => {
-      const allTeams = activeGames[gameRoomName].teams;
-      const team = allTeams[teamName];
-      io.to(teamName).emit('initialize', {
-        teamName,
-        gameName: gameRoomName,
-        members: team.members,
-        drawer: team.drawer,
-        clueGiver: team.clueGiver,
-        teams: allTeams,
+      Object.keys(activeGames[gameRoomName].teams).forEach((teamName) => {
+        const allTeams = activeGames[gameRoomName].teams;
+        const team = allTeams[teamName];
+        io.to(teamName).emit('initialize', {
+          teamName,
+          gameName: gameRoomName,
+          members: team.members,
+          drawer: team.drawer,
+          clueGiver: team.clueGiver,
+          teams: allTeams,
+        });
+        io.to(team.clueGiver.id).emit('createTeamChatRoom', {
+          teamName,
+          drawer: team.drawer,
+        });
       });
-    });
-
-    io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
+      io.to(gameRoomName).emit('startClock', activeGames[gameRoomName]);
+    }, 3000);
   }
 }
 
 async function websocketLogic(socket) {
   socket.on('disconnect', () => {
-    console.log('a user disconnected');
-    socket.leave('lobby');
+    console.log('a user disconnected', socket.id);
+    socket.to(socket.teamRoom).emit('teammate disconnected');
   });
+
+  socket.on('leave game', () => {
+    socket.leave(socket.gameRoom);
+    socket.leave(socket.teamRoom);
+  });
+
+  socket.on('teamChatReady', ({ teamName, drawer }) => {
+    io.to(drawer.id).emit('joinTeamChat', teamName);
+  });
+
   socket.on('change name', ({ name }) => {
     socket.name = name;
-    joinLobby(socket);
+    joinLobby(socket, name);
   });
-  socket.on('chat message', (message) => {
-    io.to('lobby').emit('chat message', message);
+
+  socket.on('chat message', ({ message, name }) => {
+    io.to('lobby').emit('chat message', {message, name});
   });
   socket.on('drawingChanged', (payLoad) => {
     socket.to(socket.teamRoom).emit('drawingChanged', { drawingURL: payLoad.imageData });
