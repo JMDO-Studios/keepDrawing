@@ -45,7 +45,7 @@
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.3",
     "twilio": "^3.52.0",
-    "twilio-chat": "^4.0.0",
+    "twilio-chat": "^6.0.0",
     "twilio-video": "^2.8.0",
     "util": "^0.12.3",
     "uuid": "^8.3.1",
